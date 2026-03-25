@@ -1,6 +1,6 @@
 {
   "name": "create-kickstart",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Scaffold production-ready projects with composable multi-stack templates, AI context files, and uniform scripts",
   "type": "module",
   "bin": {
@@ -10,9 +10,10 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "start": "node dist/index.js",
-    "test": "vitest",
+    "test": "vitest run",
     "lint": "eslint src/ --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "scaffold",
@@ -21,9 +22,31 @@
     "kickstart",
     "fullstack",
     "docker",
-    "ai"
+    "ai",
+    "create",
+    "starter",
+    "boilerplate",
+    "nextjs",
+    "fastapi",
+    "express",
+    "react",
+    "vue",
+    "svelte",
+    "django",
+    "spring-boot",
+    "typescript",
+    "python",
+    "go"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sswapnil2/create-kickstart.git"
+  },
+  "homepage": "https://github.com/sswapnil2/create-kickstart",
+  "bugs": {
+    "url": "https://github.com/sswapnil2/create-kickstart/issues"
+  },
   "engines": {
     "node": ">=18"
   },
