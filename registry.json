@@ -1,0 +1,156 @@
+{
+  "version": "1.0.0",
+  "frontend": {
+    "nextjs": {
+      "name": "Next.js",
+      "scaffoldCmd": "npx create-next-app@latest {{name}} --ts --app --use-npm --no-import-alias --eslint --no-tailwind --no-src-dir",
+      "scaffoldType": "cli",
+      "port": 3000,
+      "lang": "typescript",
+      "devCmd": "npm run dev",
+      "buildCmd": "npm run build",
+      "testCmd": "npm test",
+      "lintConfig": "eslint-prettier"
+    },
+    "react-vite": {
+      "name": "React + Vite",
+      "scaffoldCmd": "npm create vite@latest {{name}} -- --template react-ts",
+      "scaffoldType": "cli",
+      "port": 5173,
+      "lang": "typescript",
+      "devCmd": "npm run dev",
+      "buildCmd": "npm run build",
+      "testCmd": "npx vitest run",
+      "lintConfig": "eslint-prettier"
+    },
+    "vue": {
+      "name": "Vue 3 + Vite",
+      "scaffoldCmd": "npm create vue@latest {{name}} -- --ts --router --pinia",
+      "scaffoldType": "cli",
+      "port": 5173,
+      "lang": "typescript",
+      "devCmd": "npm run dev",
+      "buildCmd": "npm run build",
+      "testCmd": "npm test",
+      "lintConfig": "eslint-prettier"
+    },
+    "svelte": {
+      "name": "SvelteKit",
+      "scaffoldCmd": "npx sv create {{name}} --template minimal --types ts",
+      "scaffoldType": "cli",
+      "port": 5173,
+      "lang": "typescript",
+      "devCmd": "npm run dev",
+      "buildCmd": "npm run build",
+      "testCmd": "npm test",
+      "lintConfig": "eslint-prettier"
+    },
+    "angular": {
+      "name": "Angular",
+      "scaffoldCmd": "npx @angular/cli@latest new {{name}} --skip-git --style css --ssr false",
+      "scaffoldType": "cli",
+      "port": 4200,
+      "lang": "typescript",
+      "devCmd": "npx ng serve",
+      "buildCmd": "npx ng build",
+      "testCmd": "npx ng test --watch=false",
+      "lintConfig": "eslint-prettier"
+    }
+  },
+  "backend": {
+    "fastapi": {
+      "name": "FastAPI",
+      "scaffoldType": "template",
+      "port": 8000,
+      "lang": "python",
+      "devCmd": "uvicorn app.main:app --reload --port 8000",
+      "buildCmd": "echo 'No build step required'",
+      "testCmd": "pytest -v",
+      "lintConfig": "ruff"
+    },
+    "express": {
+      "name": "Express",
+      "scaffoldType": "template",
+      "port": 3001,
+      "lang": "typescript",
+      "devCmd": "npx tsx watch src/index.ts",
+      "buildCmd": "npx tsc",
+      "testCmd": "npx vitest run",
+      "lintConfig": "eslint-prettier"
+    },
+    "hono": {
+      "name": "Hono",
+      "scaffoldCmd": "npm create hono@latest {{name}}",
+      "scaffoldType": "cli",
+      "port": 3001,
+      "lang": "typescript",
+      "devCmd": "npm run dev",
+      "buildCmd": "npm run build",
+      "testCmd": "npx vitest run",
+      "lintConfig": "eslint-prettier"
+    },
+    "django": {
+      "name": "Django",
+      "scaffoldCmd": "pip install django && django-admin startproject {{name}} {{name}}",
+      "scaffoldType": "cli",
+      "port": 8000,
+      "lang": "python",
+      "devCmd": "python manage.py runserver 0.0.0.0:8000",
+      "buildCmd": "python manage.py collectstatic --noinput",
+      "testCmd": "python manage.py test",
+      "lintConfig": "ruff"
+    },
+    "go-chi": {
+      "name": "Go (Chi)",
+      "scaffoldType": "template",
+      "port": 8080,
+      "lang": "go",
+      "devCmd": "go run ./cmd/server",
+      "buildCmd": "go build -o bin/server ./cmd/server",
+      "testCmd": "go test ./...",
+      "lintConfig": "golangci-lint"
+    },
+    "spring-boot": {
+      "name": "Spring Boot",
+      "scaffoldType": "template",
+      "port": 8080,
+      "lang": "java",
+      "devCmd": "./mvnw spring-boot:run",
+      "buildCmd": "./mvnw package -DskipTests",
+      "testCmd": "./mvnw test",
+      "lintConfig": "checkstyle"
+    }
+  },
+  "standalone": {
+    "python-cli": {
+      "name": "Python CLI (Click)",
+      "scaffoldType": "template",
+      "port": 0,
+      "lang": "python",
+      "devCmd": "python -m {{name}}",
+      "buildCmd": "pip install build && python -m build",
+      "testCmd": "pytest -v",
+      "lintConfig": "ruff"
+    },
+    "python-lib": {
+      "name": "Python Library",
+      "scaffoldType": "template",
+      "port": 0,
+      "lang": "python",
+      "devCmd": "pip install -e '.[dev]'",
+      "buildCmd": "pip install build && python -m build",
+      "testCmd": "pytest -v",
+      "lintConfig": "ruff"
+    },
+    "node-cli": {
+      "name": "Node.js CLI",
+      "scaffoldType": "template",
+      "port": 0,
+      "lang": "typescript",
+      "devCmd": "npx tsx watch src/index.ts",
+      "buildCmd": "npx tsup",
+      "testCmd": "npx vitest run",
+      "lintConfig": "eslint-prettier"
+    }
+  }
+}
