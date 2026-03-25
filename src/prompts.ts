@@ -88,8 +88,15 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
             { value: "ai-context", label: "AI context files", hint: "CLAUDE.md, .cursorrules, etc." },
             { value: "pre-commit", label: "Pre-commit hooks" },
             { value: "db", label: "Database (Postgres)", hint: "via Docker" },
+            { value: "api-wiring", label: "API wiring", hint: "CORS + proxy + fetch client (fullstack)" },
+            { value: "sample-crud", label: "Sample CRUD", hint: "Working /items API + frontend list" },
+            { value: "doctor", label: "Doctor script", hint: "Validate dev environment prereqs" },
+            { value: "logging", label: "Structured logging", hint: "pino/structlog + request IDs" },
+            { value: "deploy", label: "Deploy configs", hint: "Vercel, Railway, Fly.io, Render" },
+            { value: "deps-auto", label: "Dependency automation", hint: "Dependabot config" },
+            { value: "api-types", label: "Shared API types", hint: "OpenAPI → TypeScript (fullstack)" },
           ],
-          initialValues: ["docker", "ci", "lint", "test", "env", "ai-context"],
+          initialValues: ["docker", "ci", "lint", "test", "env", "ai-context", "api-wiring", "doctor"],
         })) as Enhancement[]);
 
   if (p.isCancel(enhancements)) process.exit(0);

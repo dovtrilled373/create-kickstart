@@ -11,6 +11,10 @@ import { enhanceDb } from "./db.js";
 import { enhanceApiWiring } from "./api-wiring.js";
 import { enhanceSampleCrud } from "./sample-crud.js";
 import { enhanceDoctor } from "./doctor.js";
+import { enhanceLogging } from "./logging.js";
+import { enhanceDeploy } from "./deploy.js";
+import { enhanceDepsAuto } from "./deps-auto.js";
+import { enhanceApiTypes } from "./api-types.js";
 import * as p from "@clack/prompts";
 
 type Enhancer = (config: ProjectConfig, registry: Registry) => Promise<void>;
@@ -27,6 +31,10 @@ const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   "api-wiring": enhanceApiWiring,
   "sample-crud": enhanceSampleCrud,
   doctor: enhanceDoctor,
+  logging: enhanceLogging,
+  deploy: enhanceDeploy,
+  "deps-auto": enhanceDepsAuto,
+  "api-types": enhanceApiTypes,
 };
 
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {
