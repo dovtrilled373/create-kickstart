@@ -95,6 +95,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
             { value: "deploy", label: "Deploy configs", hint: "Vercel, Railway, Fly.io, Render" },
             { value: "deps-auto", label: "Dependency automation", hint: "Dependabot config" },
             { value: "api-types", label: "Shared API types", hint: "OpenAPI → TypeScript (fullstack)" },
+            { value: "auth", label: "Authentication scaffold", hint: "JWT + login/register endpoints" },
           ],
           initialValues: ["docker", "ci", "lint", "test", "env", "ai-context", "api-wiring", "doctor"],
         })) as Enhancement[]);

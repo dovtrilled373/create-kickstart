@@ -15,6 +15,7 @@ import { enhanceLogging } from "./logging.js";
 import { enhanceDeploy } from "./deploy.js";
 import { enhanceDepsAuto } from "./deps-auto.js";
 import { enhanceApiTypes } from "./api-types.js";
+import { enhanceAuth } from "./auth.js";
 import * as p from "@clack/prompts";
 
 type Enhancer = (config: ProjectConfig, registry: Registry) => Promise<void>;
@@ -35,6 +36,7 @@ const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   deploy: enhanceDeploy,
   "deps-auto": enhanceDepsAuto,
   "api-types": enhanceApiTypes,
+  auth: enhanceAuth,
 };
 
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {

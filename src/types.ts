@@ -19,7 +19,8 @@ export type Enhancement =
   | "logging"
   | "deploy"
   | "deps-auto"
-  | "api-types";
+  | "api-types"
+  | "auth";
 
 export interface ProjectConfig {
   name: string;
