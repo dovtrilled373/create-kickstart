@@ -1,0 +1,41 @@
+#!/bin/sh
+# Maven Wrapper script
+# Downloads and runs Apache Maven if not already installed
+
+set -e
+
+MAVEN_VERSION="3.9.6"
+MAVEN_HOME="${HOME}/.m2/wrapper/dists/apache-maven-${MAVEN_VERSION}"
+MAVEN_BIN="${MAVEN_HOME}/bin/mvn"
+WRAPPER_PROPERTIES="$(dirname "$0")/.mvn/wrapper/maven-wrapper.properties"
+
+if [ -f "$WRAPPER_PROPERTIES" ]; then
+    DIST_URL=$(grep 'distributionUrl' "$WRAPPER_PROPERTIES" | cut -d'=' -f2-)
+fi
+
+if [ -z "$DIST_URL" ]; then
+    DIST_URL="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.zip"
+fi
+
+if command -v mvn >/dev/null 2>&1; then
+    exec mvn "$@"
+fi
+
+if [ ! -x "$MAVEN_BIN" ]; then
+    echo "Downloading Maven ${MAVEN_VERSION}..."
+    mkdir -p "$(dirname "$MAVEN_HOME")"
+    TMPFILE=$(mktemp /tmp/maven-XXXXXX.zip)
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL -o "$TMPFILE" "$DIST_URL"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -q -O "$TMPFILE" "$DIST_URL"
+    else
+        echo "Error: curl or wget is required to download Maven." >&2
+        exit 1
+    fi
+    unzip -q -d "$(dirname "$MAVEN_HOME")" "$TMPFILE"
+    rm -f "$TMPFILE"
+    chmod +x "$MAVEN_BIN"
+fi
+
+exec "$MAVEN_BIN" "$@"
