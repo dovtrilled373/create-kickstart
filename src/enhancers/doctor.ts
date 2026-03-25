@@ -122,10 +122,10 @@ check() {
     local version
     version=$("$cmd" --version 2>&1 | head -1)
     echo -e "  ✅ $name: $version"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     echo -e "  ❌ $name: not found (need $min_version+)"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
@@ -133,10 +133,10 @@ check_port() {
   local port="$1" service="$2"
   if lsof -i ":$port" &>/dev/null 2>&1; then
     echo -e "  ⚠️  Port $port ($service): IN USE"
-    ((WARN++))
+    WARN=$((WARN + 1))
   else
     echo -e "  ✅ Port $port ($service): available"
-    ((PASS++))
+    PASS=$((PASS + 1))
   fi
 }
 
