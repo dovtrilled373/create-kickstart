@@ -12,7 +12,14 @@ export type Enhancement =
   | "env"
   | "ai-context"
   | "pre-commit"
-  | "db";
+  | "db"
+  | "api-wiring"
+  | "sample-crud"
+  | "doctor"
+  | "logging"
+  | "deploy"
+  | "deps-auto"
+  | "api-types";
 
 export interface ProjectConfig {
   name: string;

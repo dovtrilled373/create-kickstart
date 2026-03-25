@@ -8,11 +8,14 @@ import { enhanceAiContext } from "./ai-context.js";
 import { enhanceScripts } from "./scripts.js";
 import { enhancePreCommit } from "./pre-commit.js";
 import { enhanceDb } from "./db.js";
+import { enhanceApiWiring } from "./api-wiring.js";
+import { enhanceSampleCrud } from "./sample-crud.js";
+import { enhanceDoctor } from "./doctor.js";
 import * as p from "@clack/prompts";
 
 type Enhancer = (config: ProjectConfig, registry: Registry) => Promise<void>;
 
-const ENHANCER_MAP: Record<Enhancement, Enhancer> = {
+const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   docker: enhanceDocker,
   ci: enhanceCi,
   lint: enhanceLint,
@@ -21,6 +24,9 @@ const ENHANCER_MAP: Record<Enhancement, Enhancer> = {
   "ai-context": enhanceAiContext,
   "pre-commit": enhancePreCommit,
   db: enhanceDb,
+  "api-wiring": enhanceApiWiring,
+  "sample-crud": enhanceSampleCrud,
+  doctor: enhanceDoctor,
 };
 
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {
