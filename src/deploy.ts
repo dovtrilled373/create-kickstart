@@ -4,6 +4,7 @@ import path from "path";
 import chalk from "chalk";
 import { DeployProvider } from "./types.js";
 import { PRIMARY_BACKEND_NAME } from "./enhancers/utils.js";
+import { writeTerraform } from "./deploy-terraform.js";
 
 // ---------------------------------------------------------------------------
 // CLI parsing for "deploy" subcommand
@@ -844,6 +845,12 @@ export async function runDeploy(argv: string[]): Promise<void> {
     }
   }
 
+  // Generate Terraform for cloud-native providers
+  const tfFiles = await writeTerraform(projectRoot, projectName, provider);
+  if (tfFiles.length > 0) {
+    p.log.info(`  Generated Terraform (${tfFiles.length} files)`);
+  }
+
   // Write deploy script
   const scriptContent = deployScript(provider, projectName);
   const scriptsDir = path.join(projectRoot, "scripts");
@@ -861,6 +868,11 @@ export async function runDeploy(argv: string[]): Promise<void> {
     console.log(`    ${chalk.cyan(f)}`);
   }
   console.log(`    ${chalk.cyan("scripts/deploy.sh")}`);
+  if (tfFiles.length > 0) {
+    console.log();
+    console.log(chalk.bold("  Provision infra:"));
+    console.log(`    ${chalk.cyan("cd deploy/terraform && terraform init && terraform apply")}`);
+  }
   console.log();
   console.log(`  ${chalk.bold("Deploy:")} ${chalk.cyan("bash scripts/deploy.sh")}`);
   console.log();
