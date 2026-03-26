@@ -1,6 +1,6 @@
 {
   "name": "create-kickstart",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scaffold production-ready fullstack, backend, mobile projects. React + FastAPI/Express/Go/Spring Boot. Docker, CI/CD, Terraform, Grafana, auth, CRUD, AI context (CLAUDE.md, .cursorrules). One command.",
   "type": "module",
   "bin": {
