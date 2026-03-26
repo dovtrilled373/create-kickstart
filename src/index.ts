@@ -115,6 +115,7 @@ async function main() {
       enhancements: args.enhancements?.length
         ? args.enhancements
         : ["docker", "ci", "lint", "test", "env", "ai-context"],
+      database: args.database,
       targetDir: `${process.cwd()}/${args.name}`,
     };
   }
@@ -126,6 +127,7 @@ async function main() {
   if (config.frontend) p.log.info(`  Frontend:     ${config.frontend}`);
   if (config.backend) p.log.info(`  Backend:      ${config.backend}`);
   if (config.standalone) p.log.info(`  Stack:        ${config.standalone}`);
+  if (config.database) p.log.info(`  Database:     ${config.database}`);
   p.log.info(`  Enhancements: ${config.enhancements.join(", ")}`);
   p.log.info(`  Directory:    ${config.targetDir}`);
 
@@ -141,6 +143,10 @@ async function main() {
   const readmeContent = generateReadme(config);
   await fs.writeFile(path.join(config.targetDir, "README.md"), readmeContent, "utf-8");
   readmeSpinner.stop("README.md generated");
+
+  // 7b. Clean up temp files
+  const dbMeta = path.join(config.targetDir, ".db-meta.json");
+  if (await fs.pathExists(dbMeta)) await fs.remove(dbMeta);
 
   // 8. Initialize git repo
   const gitSpinner = p.spinner();

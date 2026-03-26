@@ -39,11 +39,36 @@ const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   auth: enhanceAuth,
 };
 
+// Ensure certain enhancers run in dependency order regardless of user-specified order
+const ENHANCER_ORDER: Enhancement[] = [
+  "env",          // Creates .env.example first
+  "db",           // Appends DB vars to .env.example, writes connection configs
+  "docker",       // Reads DB choice for docker-compose services
+  "ci",
+  "lint",
+  "test",
+  "ai-context",
+  "pre-commit",
+  "api-wiring",
+  "sample-crud",
+  "doctor",
+  "logging",
+  "deploy",
+  "deps-auto",
+  "api-types",
+  "auth",
+];
+
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {
   // Scripts are always generated
   await enhanceScripts(config, registry);
 
-  for (const enh of config.enhancements) {
+  // Sort enhancements by dependency order
+  const ordered = [...config.enhancements].sort(
+    (a, b) => ENHANCER_ORDER.indexOf(a) - ENHANCER_ORDER.indexOf(b),
+  );
+
+  for (const enh of ordered) {
     const enhancer = ENHANCER_MAP[enh];
     if (enhancer) {
       const spinner = p.spinner();

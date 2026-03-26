@@ -22,6 +22,8 @@ export type Enhancement =
   | "api-types"
   | "auth";
 
+export type DatabaseChoice = "postgres" | "mysql" | "sqlite" | "mongodb";
+
 export interface ProjectConfig {
   name: string;
   type: ProjectType;
@@ -29,6 +31,7 @@ export interface ProjectConfig {
   backend?: BackendStack;
   standalone?: StandaloneStack;
   enhancements: Enhancement[];
+  database?: DatabaseChoice;
   targetDir: string;
 }
 

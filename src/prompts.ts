@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { ProjectConfig, ProjectType, FrontendStack, BackendStack, StandaloneStack, Enhancement } from "./types.js";
+import { ProjectConfig, ProjectType, FrontendStack, BackendStack, StandaloneStack, Enhancement, DatabaseChoice } from "./types.js";
 
 export async function runPrompts(partial: Partial<ProjectConfig>): Promise<ProjectConfig> {
   const name =
@@ -87,7 +87,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
             { value: "env", label: ".env management", hint: "Recommended" },
             { value: "ai-context", label: "AI context files", hint: "CLAUDE.md, .cursorrules, etc." },
             { value: "pre-commit", label: "Pre-commit hooks" },
-            { value: "db", label: "Database (Postgres)", hint: "via Docker" },
+            { value: "db", label: "Database", hint: "Postgres, MySQL, SQLite, or MongoDB" },
             { value: "api-wiring", label: "API wiring", hint: "CORS + proxy + fetch client (fullstack)" },
             { value: "sample-crud", label: "Sample CRUD", hint: "Working /items API + frontend list" },
             { value: "doctor", label: "Doctor script", hint: "Validate dev environment prereqs" },
@@ -102,7 +102,22 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
 
   if (p.isCancel(enhancements)) process.exit(0);
 
+  // Ask which database if db enhancement is selected
+  let database: DatabaseChoice | undefined = partial.database;
+  if (enhancements.includes("db") && !database) {
+    database = (await p.select({
+      message: "Pick your database:",
+      options: [
+        { value: "postgres", label: "PostgreSQL", hint: "Recommended for production" },
+        { value: "mysql", label: "MySQL" },
+        { value: "sqlite", label: "SQLite", hint: "Zero config, great for prototypes" },
+        { value: "mongodb", label: "MongoDB", hint: "Document store" },
+      ],
+    })) as DatabaseChoice;
+    if (p.isCancel(database)) process.exit(0);
+  }
+
   const targetDir = `${process.cwd()}/${name}`;
 
-  return { name, type, frontend, backend, standalone, enhancements, targetDir };
+  return { name, type, frontend, backend, standalone, enhancements, database, targetDir };
 }

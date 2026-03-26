@@ -1,7 +1,8 @@
 import fs from "fs-extra";
 import path from "path";
-import { ProjectConfig, Registry } from "../types.js";
+import { ProjectConfig, Registry, DatabaseChoice } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { dockerComposeService, dockerComposeVolume } from "./db.js";
 
 // ---------------------------------------------------------------------------
 // Dockerfile generators
@@ -138,19 +139,8 @@ function composeService(
   return svc;
 }
 
-function postgresService(): string {
-  return `  postgres:
-    image: postgres:16-alpine
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: \${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: \${POSTGRES_DB:-app}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-`;
+function getDbServiceName(db: DatabaseChoice): string {
+  return db; // postgres, mysql, mongodb — used as depends_on target
 }
 
 // ---------------------------------------------------------------------------
@@ -160,6 +150,10 @@ function postgresService(): string {
 export async function enhanceDocker(config: ProjectConfig, registry: Registry): Promise<void> {
   const { targetDir, type } = config;
   const hasDb = config.enhancements.includes("db");
+  const db: DatabaseChoice = config.database ?? "postgres";
+  const dbServiceName = getDbServiceName(db);
+  // SQLite doesn't need a Docker service
+  const needsDbService = hasDb && db !== "sqlite";
 
   if (type === "fullstack") {
     // Frontend Dockerfile
@@ -188,15 +182,16 @@ export async function enhanceDocker(config: ProjectConfig, registry: Registry): 
       compose += composeService("frontend", "./frontend", feEntry.port, ".env");
     }
     if (beEntry) {
-      const deps = hasDb ? ["postgres"] : undefined;
+      const deps = needsDbService ? [dbServiceName] : undefined;
       compose += composeService("backend", "./backend", beEntry.port, ".env", deps);
     }
-    if (hasDb) {
-      compose += postgresService();
+    if (needsDbService) {
+      compose += dockerComposeService(db);
     }
 
-    if (hasDb) {
-      compose += `\nvolumes:\n  pgdata:\n`;
+    const vol = needsDbService ? dockerComposeVolume(db) : "";
+    if (vol) {
+      compose += `\nvolumes:\n${vol}`;
     }
 
     await fs.writeFile(path.join(targetDir, "docker-compose.yml"), compose);
@@ -209,11 +204,14 @@ export async function enhanceDocker(config: ProjectConfig, registry: Registry): 
     await fs.writeFile(path.join(targetDir, ".dockerignore"), dockerignore());
 
     let compose = `version: "3.8"\n\nservices:\n`;
-    const deps = hasDb ? ["postgres"] : undefined;
+    const deps = needsDbService ? [dbServiceName] : undefined;
     compose += composeService("app", ".", entry.port, ".env", deps);
-    if (hasDb) {
-      compose += postgresService();
-      compose += `\nvolumes:\n  pgdata:\n`;
+    if (needsDbService) {
+      compose += dockerComposeService(db);
+      const vol = dockerComposeVolume(db);
+      if (vol) {
+        compose += `\nvolumes:\n${vol}`;
+      }
     }
 
     await fs.writeFile(path.join(targetDir, "docker-compose.yml"), compose);

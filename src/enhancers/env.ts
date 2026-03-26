@@ -34,14 +34,7 @@ export async function enhanceEnv(config: ProjectConfig, registry: Registry): Pro
     }
   }
 
-  if (hasDb) {
-    lines.push("# Database");
-    lines.push("DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app");
-    lines.push("POSTGRES_USER=postgres");
-    lines.push("POSTGRES_PASSWORD=postgres");
-    lines.push("POSTGRES_DB=app");
-    lines.push("");
-  }
+  // DB env vars are added by the db enhancer with the correct database type
 
   const content = lines.join("\n") + "\n";
   await fs.writeFile(path.join(targetDir, ".env.example"), content);

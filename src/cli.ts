@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { ProjectConfig, Enhancement, ProjectType } from "./types.js";
+import { ProjectConfig, Enhancement, ProjectType, DatabaseChoice } from "./types.js";
 
 export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactive: boolean } {
   const program = new Command();
@@ -14,6 +14,7 @@ export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactiv
     .option("--backend <stack>", "Backend stack: fastapi, express, hono, django, go-chi, spring-boot")
     .option("--standalone <stack>", "Standalone stack: python-cli, python-lib, node-cli")
     .option("--with <enhancements>", "Comma-separated enhancements: docker,ci,lint,test,env,ai-context,pre-commit,db")
+    .option("--database <db>", "Database: postgres, mysql, sqlite, mongodb")
     .option("--no-interactive", "Disable interactive prompts (for AI agents and scripts)")
     .parse(argv);
 
@@ -33,6 +34,7 @@ export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactiv
     backend: opts.backend,
     standalone: opts.standalone,
     enhancements,
+    database: opts.database as DatabaseChoice | undefined,
     interactive: isInteractive,
   };
 }
