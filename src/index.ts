@@ -98,6 +98,11 @@ async function main() {
     await runDeploy(args.subcommandArgs ?? []);
     return;
   }
+  if (args.subcommand === "ai") {
+    const { runAiSetup } = await import("./ai-setup.js");
+    await runAiSetup(args.subcommandArgs ?? []);
+    return;
+  }
 
   // 2. Load registry
   const registrySpinner = p.spinner();

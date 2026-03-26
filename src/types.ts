@@ -30,6 +30,20 @@ export type DatabaseChoice = "postgres" | "mysql" | "sqlite" | "mongodb";
 export type AnalyticsProvider = "posthog" | "clevertap" | "moengage" | "mixpanel" | "segment";
 export type ApiProtocol = "graphql" | "grpc" | "graphql+grpc";
 
+// AI integration
+export type LlmProvider = "claude" | "openai" | "gemini" | "ollama";
+export type VectorDb = "pinecone" | "qdrant" | "chromadb" | "pgvector";
+export type AgentFramework = "langgraph" | "claude-agent-sdk" | "crewai" | "raw";
+export type AiFeature = "rag" | "agents" | "eval";
+
+export interface AiConfig {
+  provider: LlmProvider;
+  vectorDb?: VectorDb;
+  framework?: AgentFramework;
+  features: AiFeature[];
+  targetDir: string; // project root
+}
+
 // Deploy providers — progressive: PaaS → Cloud-native → Kubernetes
 export type DeployProvider =
   // PaaS (easy, great for POCs)

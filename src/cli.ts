@@ -13,7 +13,7 @@ function trySubcommand(argv: string[], name: string): ParseResult | null {
 
 export function parseArgs(argv: string[]): ParseResult {
   // Check for subcommands before commander parsing
-  for (const cmd of ["add", "deploy"]) {
+  for (const cmd of ["add", "deploy", "ai"]) {
     const result = trySubcommand(argv, cmd);
     if (result) return result;
   }
