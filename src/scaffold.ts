@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { ProjectConfig, Registry, RegistryEntry } from "./types.js";
 import { getRegistryEntry } from "./registry.js";
+import { PRIMARY_BACKEND_NAME } from "./enhancers/utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -162,14 +163,14 @@ export async function scaffold(
       throw err;
     }
 
-    // Backend
-    const beDir = path.join(targetDir, "backend");
+    // Backend → backend/api/
+    const beDir = path.join(targetDir, "backend", PRIMARY_BACKEND_NAME);
     const beEntry = getRegistryEntry(registry, "backend", config.backend);
     const s2 = p.spinner();
     s2.start(`Scaffolding backend (${beEntry.name})…`);
     try {
       if (beEntry.scaffoldType === "cli") {
-        await scaffoldWithCli(beEntry, beDir, "backend");
+        await scaffoldWithCli(beEntry, beDir, PRIMARY_BACKEND_NAME);
       } else {
         await scaffoldWithTemplate(config.backend, beDir, name);
       }

@@ -3,6 +3,7 @@ import path from "path";
 import { ProjectConfig, Registry, DatabaseChoice } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
 import { dockerComposeService, dockerComposeVolume } from "./db.js";
+import { PRIMARY_BACKEND_NAME } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // Dockerfile generators
@@ -164,10 +165,10 @@ export async function enhanceDocker(config: ProjectConfig, registry: Registry): 
       await fs.writeFile(path.join(feDir, ".dockerignore"), dockerignore());
     }
 
-    // Backend Dockerfile
+    // Backend Dockerfile → backend/api/
     if (config.backend) {
       const beEntry = getRegistryEntry(registry, "backend", config.backend);
-      const beDir = path.join(targetDir, "backend");
+      const beDir = path.join(targetDir, "backend", PRIMARY_BACKEND_NAME);
       await fs.writeFile(path.join(beDir, "Dockerfile"), getDockerfileForLang(beEntry.lang, beEntry.port));
       await fs.writeFile(path.join(beDir, ".dockerignore"), dockerignore());
     }
@@ -183,7 +184,7 @@ export async function enhanceDocker(config: ProjectConfig, registry: Registry): 
     }
     if (beEntry) {
       const deps = needsDbService ? [dbServiceName] : undefined;
-      compose += composeService("backend", "./backend", beEntry.port, ".env", deps);
+      compose += composeService(PRIMARY_BACKEND_NAME, `./backend/${PRIMARY_BACKEND_NAME}`, beEntry.port, ".env", deps);
     }
     if (needsDbService) {
       compose += dockerComposeService(db);

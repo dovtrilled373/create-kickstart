@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry, RegistryEntry } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { PRIMARY_BACKEND_NAME } from "./utils.js";
 
 const BASH_HEADER = `#!/usr/bin/env bash
 set -euo pipefail
@@ -21,7 +22,7 @@ function setupScript(config: ProjectConfig, registry: Registry): string {
     }
     if (config.backend) {
       const be = getRegistryEntry(registry, "backend", config.backend);
-      s += installCmd(be, "backend");
+      s += installCmd(be, `backend/${PRIMARY_BACKEND_NAME}`);
     }
   } else {
     const { entry } = resolveStack(config, registry);
@@ -50,7 +51,7 @@ function devScript(config: ProjectConfig, registry: Registry): string {
     }
     if (config.backend) {
       const be = getRegistryEntry(registry, "backend", config.backend);
-      cmds.push(`(cd backend && ${be.devCmd})`);
+      cmds.push(`(cd backend/${PRIMARY_BACKEND_NAME} && ${be.devCmd})`);
     }
 
     s += `trap 'kill 0' EXIT\n\n`;
@@ -76,7 +77,7 @@ function testScript(config: ProjectConfig, registry: Registry): string {
     }
     if (config.backend) {
       const be = getRegistryEntry(registry, "backend", config.backend);
-      s += `echo "Running backend tests..."\n(cd backend && ${be.testCmd})\n\n`;
+      s += `echo "Running backend tests..."\n(cd backend/${PRIMARY_BACKEND_NAME} && ${be.testCmd})\n\n`;
     }
   } else {
     const { entry } = resolveStack(config, registry);
@@ -96,7 +97,7 @@ function lintScript(config: ProjectConfig, registry: Registry): string {
     }
     if (config.backend) {
       const be = getRegistryEntry(registry, "backend", config.backend);
-      s += `echo "Linting backend..."\n(cd backend && ${lintCmd(be)})\n\n`;
+      s += `echo "Linting backend..."\n(cd backend/${PRIMARY_BACKEND_NAME} && ${lintCmd(be)})\n\n`;
     }
   } else {
     const { entry } = resolveStack(config, registry);
@@ -116,7 +117,7 @@ function buildScript(config: ProjectConfig, registry: Registry): string {
     }
     if (config.backend) {
       const be = getRegistryEntry(registry, "backend", config.backend);
-      s += `echo "Building backend..."\n(cd backend && ${be.buildCmd})\n\n`;
+      s += `echo "Building backend..."\n(cd backend/${PRIMARY_BACKEND_NAME} && ${be.buildCmd})\n\n`;
     }
   } else {
     const { entry } = resolveStack(config, registry);

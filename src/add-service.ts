@@ -127,10 +127,10 @@ export async function runAddService(argv: string[]): Promise<void> {
   p.log.info(`  Name:     ${addConfig.serviceName}`);
   p.log.info(`  Backend:  ${addConfig.backend} (${beEntry.lang})`);
   p.log.info(`  Port:     ${port}`);
-  p.log.info(`  Into:     ${addConfig.targetDir}/${addConfig.serviceName}/`);
+  p.log.info(`  Into:     ${addConfig.targetDir}/backend/${addConfig.serviceName}/`);
 
-  // Create a ProjectConfig that targets the service subdirectory
-  const serviceDir = path.join(addConfig.targetDir, addConfig.serviceName);
+  // Create a ProjectConfig that targets the service subdirectory inside backend/
+  const serviceDir = path.join(addConfig.targetDir, "backend", addConfig.serviceName);
   const projectConfig = {
     name: addConfig.serviceName,
     type: "backend" as const,
@@ -185,7 +185,7 @@ async function updateDockerCompose(
   if (compose.includes(`  ${serviceName}:`)) return; // Already exists
 
   const serviceBlock = `  ${serviceName}:
-    build: ./${serviceName}
+    build: ./backend/${serviceName}
     ports:
       - "${port}:${port}"
     env_file:
@@ -218,10 +218,10 @@ async function updateMakefile(
   makefile += `
 # --- ${serviceName} ---
 ${serviceName}-dev:
-\tcd ${serviceName} && ${beEntry.devCmd}
+\tcd backend/${serviceName} && ${beEntry.devCmd}
 
 ${serviceName}-test:
-\tcd ${serviceName} && ${beEntry.testCmd}
+\tcd backend/${serviceName} && ${beEntry.testCmd}
 `;
 
   await fs.writeFile(makefilePath, makefile);

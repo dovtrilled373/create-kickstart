@@ -6,11 +6,14 @@ import { ProjectConfig } from "../types.js";
 // Directory resolution — used by 7+ enhancers
 // ---------------------------------------------------------------------------
 
+export const PRIMARY_BACKEND_NAME = "api";
+
 export function resolveProjectDirs(config: ProjectConfig) {
   const isFullstack = config.type === "fullstack";
   return {
     isFullstack,
-    beDir: isFullstack ? path.join(config.targetDir, "backend") : config.targetDir,
+    beDir: isFullstack ? path.join(config.targetDir, "backend", PRIMARY_BACKEND_NAME) : config.targetDir,
+    backendRoot: path.join(config.targetDir, "backend"),
     feDir: isFullstack ? path.join(config.targetDir, "frontend") : config.targetDir,
     mobileDir: isFullstack ? path.join(config.targetDir, "mobile") : config.targetDir,
   };
