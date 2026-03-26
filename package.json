@@ -1,7 +1,7 @@
 {
   "name": "create-kickstart",
   "version": "1.0.0",
-  "description": "Scaffold production-ready projects with composable multi-stack templates, AI context files, and uniform scripts",
+  "description": "Scaffold production-ready fullstack, backend, mobile projects. React + FastAPI/Express/Go/Spring Boot. Docker, CI/CD, Terraform, Grafana, auth, CRUD, AI context (CLAUDE.md, .cursorrules). One command.",
   "type": "module",
   "bin": {
     "create-kickstart": "./dist/index.js"
@@ -36,7 +36,33 @@
     "spring-boot",
     "typescript",
     "python",
-    "go"
+    "go",
+    "project-generator",
+    "monorepo",
+    "microservices",
+    "terraform",
+    "kubernetes",
+    "helm",
+    "grafana",
+    "opentelemetry",
+    "graphql",
+    "grpc",
+    "posthog",
+    "segment",
+    "react-native",
+    "flutter",
+    "cookiecutter",
+    "yeoman",
+    "create-app",
+    "project-scaffold",
+    "ai-friendly",
+    "claude",
+    "cursor",
+    "copilot",
+    "deployment",
+    "aws-ecs",
+    "cloud-run",
+    "railway"
   ],
   "license": "MIT",
   "repository": {

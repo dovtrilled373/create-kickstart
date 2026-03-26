@@ -1,81 +1,140 @@
 # create-kickstart
 
-Scaffold production-ready projects in seconds. Composable multi-stack templates with AI context files, Docker, CI, and uniform scripts.
+Scaffold production-ready fullstack, backend, mobile, and CLI projects in seconds. One command. Any stack. AI-friendly.
+
+```bash
+npx create-kickstart
+```
+
+## Why?
+
+Starting a new project shouldn't take hours. Every time you start a POC or greenfield project, you repeat the same setup: Docker, CI/CD, linting, testing, env management, database configs, deployment. **create-kickstart does all of it in one command.**
+
+## What makes it different?
+
+| Feature | create-kickstart | create-next-app | cookiecutter | yeoman |
+|---------|-----------------|-----------------|-------------|--------|
+| Multi-stack (React + FastAPI) | Yes | No | No | No |
+| Add services to existing project | Yes | No | No | No |
+| Switch deploy providers | Yes | No | No | No |
+| AI context files (CLAUDE.md, .cursorrules) | Yes | No | No | No |
+| Observability (Grafana + OTel) | Yes | No | No | No |
+| 8 deploy providers + Terraform | Yes | No | No | No |
+| Analytics SDK (PostHog, Segment) | Yes | No | No | No |
+| GraphQL + gRPC scaffold | Yes | No | No | No |
+| Mobile (React Native, Flutter) | Yes | No | No | No |
 
 ## Quick Start
 
 ```bash
-# Interactive mode
+# Interactive — walks you through every choice
 npx create-kickstart
 
-# Non-interactive (for AI agents and scripts)
+# One-liner — for AI agents and scripts
 npx create-kickstart my-app \
   --type fullstack \
-  --frontend nextjs \
+  --frontend react-vite \
   --backend fastapi \
-  --with docker,ci,lint,test,env,ai-context,api-wiring,sample-crud,doctor,logging,deploy,deps-auto,api-types \
+  --with docker,ci,lint,test,env,db,ai-context \
+  --database postgres \
   --no-interactive
-
-# Zero-deps via curl
-curl -fsSL https://raw.githubusercontent.com/sswapnil2/create-kickstart/main/setup.sh | bash -s -- \
-  --name my-app --type fullstack --frontend nextjs --backend fastapi
 ```
-
-## Features
-
-- **Composable stacks** — Mix any frontend with any backend
-- **Official starters** — Uses create-next-app, create-vite, etc. under the hood
-- **Enhancement packs** — 15 enhancements: Docker, CI, linting, testing, .env, pre-commit, and more
-- **AI-friendly** — Generates CLAUDE.md, .cursorrules, copilot.md, AI_CONTEXT.md
-- **API wiring** — CORS, proxy, and typed fetch client pre-configured for fullstack
-- **Sample CRUD** — Working /items API with seed data + frontend list view on first `make dev`
-- **Dev doctor** — `make doctor` validates Node/Python/Go/Docker versions before setup
-- **Structured logging** — pino/structlog/zerolog with request ID middleware out of the box
-- **Deploy ready** — Vercel, Railway, Fly.io, Render configs generated
-- **Uniform scripts** — `make setup && make dev` works for every stack
-- **Three modes** — Interactive, CLI flags, curl|bash
 
 ## Supported Stacks
 
 ### Frontend
-- Next.js (TypeScript)
-- React + Vite (TypeScript)
-- Vue 3 + Vite
-- SvelteKit
-- Angular
+Next.js | React + Vite | Vue 3 | SvelteKit | Angular
 
 ### Backend
-- FastAPI (Python)
-- Express (TypeScript)
-- Hono (TypeScript)
-- Django (Python)
-- Go (Chi)
-- Spring Boot (Java)
+FastAPI (Python) | Express (TypeScript) | Hono | Django | Go Chi | Spring Boot (Java)
 
-### Standalone
-- Python CLI (Click)
-- Python Library
-- Node.js CLI
+### Mobile
+React Native | Flutter | Swift (iOS) | Kotlin (Android)
+
+### Database
+PostgreSQL | MySQL | SQLite | MongoDB
 
 ## Enhancements
 
-| Flag | What it adds |
-|------|-------------|
-| `docker` | Dockerfile per service, docker-compose.yml |
-| `ci` | GitHub Actions workflow (lint + test + build) |
-| `lint` | ESLint/Prettier, Ruff, or golangci-lint |
+Pick what you need — mix and match:
+
+| Enhancement | What it does |
+|------------|-------------|
+| `docker` | Dockerfile + docker-compose for all services |
+| `ci` | GitHub Actions CI workflow |
+| `lint` | ESLint/Prettier, Ruff, golangci-lint |
 | `test` | Test runner config + example tests |
-| `env` | .env.example + .env management |
-| `ai-context` | CLAUDE.md, .cursorrules, copilot.md |
-| `pre-commit` | Git hooks for linting |
-| `db` | PostgreSQL via Docker Compose |
-| `api-wiring` | CORS config + dev proxy + typed API client (fullstack) |
-| `sample-crud` | Working /items CRUD + seed data + frontend list view |
-| `doctor` | `scripts/doctor.sh` — validate dev environment prerequisites |
-| `logging` | Structured JSON logging with request ID middleware |
-| `deploy` | Vercel, Railway, Fly.io, Render deployment configs |
-| `deps-auto` | Dependabot config with weekly schedule + grouping |
-| `api-types` | OpenAPI → TypeScript types sync (fullstack) |
+| `env` | .env management with .env.example |
+| `db` | Database configs (Postgres, MySQL, SQLite, MongoDB) |
+| `ai-context` | CLAUDE.md, .cursorrules, copilot.md, AI_CONTEXT.md |
+| `auth` | JWT authentication (login/register) |
+| `sample-crud` | Working /items CRUD API + frontend component |
+| `api-wiring` | CORS + proxy + typed API client (fullstack) |
+| `doctor` | Dev environment prerequisite checker |
+| `logging` | Structured logging (pino, structlog, zerolog) |
+| `observability` | OpenTelemetry + Grafana + Prometheus + Tempo + Loki |
+| `analytics` | PostHog, CleverTap, MoEngage, Mixpanel, Segment |
+| `api-protocol` | GraphQL (client-facing) + gRPC (internal) |
+| `deploy` | Deploy configs for 8 platforms |
+| `deps-auto` | Dependabot automation |
+| `pre-commit` | Pre-commit hooks |
+
+## Multi-Service Monorepo
+
+Add backend services in any language to your existing project:
+
+```bash
+cd my-app
+npx create-kickstart add payment-svc --backend express --with db,test
+npx create-kickstart add notifications --backend go-chi --with test
+```
+
+Result:
+```
+my-app/
+  frontend/
+  backend/
+    api/              # Primary (FastAPI)
+    payment-svc/      # Express (TypeScript)
+    notifications/    # Go (Chi)
+  docker-compose.yml  # All services wired
+```
+
+## Progressive Deployment
+
+Start easy, graduate when ready:
+
+```bash
+# POC — deploy to Railway in 1 minute
+npx create-kickstart deploy --provider railway
+
+# Production — switch to AWS ECS with Terraform
+npx create-kickstart deploy --provider aws-ecs
+# Generates: VPC, ECS cluster, ECR, ALB, GitHub Actions CI/CD
+
+# Scale — switch to Kubernetes
+npx create-kickstart deploy --provider kubernetes
+# Generates: Helm chart + K8s manifests
+```
+
+| Tier | Providers |
+|------|-----------|
+| PaaS | Railway, Render, Fly.io, Vercel |
+| Cloud-native | AWS ECS (Fargate), GCP Cloud Run, Azure Container Apps |
+| Kubernetes | Helm charts + K8s manifests |
+
+Cloud-native providers include full Terraform modules (VPC, load balancer, container registry, auto-scaling).
+
+## AI-Friendly
+
+Every generated project includes AI context files tailored for each tool:
+
+- **CLAUDE.md** — Architecture diagram, commands, "how to add" recipes for Claude Code
+- **.cursorrules** — Code style rules, project structure rules for Cursor
+- **.github/copilot.md** — File locations, test commands for GitHub Copilot
+- **AI_CONTEXT.md** — Overview and quick reference for ChatGPT and others
+
+The CLI itself is AI-agent friendly — `--no-interactive` mode accepts all options as flags, so any AI coding assistant can scaffold projects programmatically.
 
 ## Contributing
 
@@ -83,9 +142,11 @@ curl -fsSL https://raw.githubusercontent.com/sswapnil2/create-kickstart/main/set
 git clone https://github.com/sswapnil2/create-kickstart
 cd create-kickstart
 npm install
-npm run dev   # watch mode
-npm run build && node dist/index.js  # test locally
+npm run build
+node dist/index.js my-app --type backend --backend fastapi --with docker,env --no-interactive
 ```
+
+See [CLAUDE.md](CLAUDE.md) for architecture docs and "how to add" guides.
 
 ## License
 
