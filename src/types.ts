@@ -1,7 +1,7 @@
 export type ProjectType = "fullstack" | "frontend" | "backend" | "mobile" | "cli-lib";
 
 export type FrontendStack = "nextjs" | "react-vite" | "vue" | "svelte" | "angular";
-export type BackendStack = "fastapi" | "express" | "hono" | "django" | "go-chi" | "spring-boot";
+export type BackendStack = "fastapi" | "express" | "hono" | "django" | "go-chi" | "spring-boot" | "axum" | "aspnet" | "phoenix";
 export type MobileStack = "react-native" | "flutter" | "swift" | "kotlin";
 export type StandaloneStack = "python-cli" | "python-lib" | "node-cli";
 
@@ -24,11 +24,16 @@ export type Enhancement =
   | "auth"
   | "analytics"
   | "observability"
-  | "api-protocol";
+  | "api-protocol"
+  | "cache"
+  | "queue"
+  | "websocket"
+  | "storage";
 
 export type DatabaseChoice = "postgres" | "mysql" | "sqlite" | "mongodb";
 export type AnalyticsProvider = "posthog" | "clevertap" | "moengage" | "mixpanel" | "segment";
 export type ApiProtocol = "graphql" | "grpc" | "graphql+grpc";
+export type QueueProvider = "rabbitmq" | "kafka";
 
 // AI integration
 export type LlmProvider = "claude" | "openai" | "gemini" | "ollama";
@@ -69,6 +74,7 @@ export interface ProjectConfig {
   database?: DatabaseChoice;
   analyticsProvider?: AnalyticsProvider;
   apiProtocol?: ApiProtocol;
+  queueProvider?: QueueProvider;
   targetDir: string;
 }
 

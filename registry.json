@@ -118,6 +118,38 @@
       "buildCmd": "./mvnw package -DskipTests",
       "testCmd": "./mvnw test",
       "lintConfig": "checkstyle"
+    },
+    "axum": {
+      "name": "Axum",
+      "scaffoldType": "template",
+      "port": 8080,
+      "lang": "rust",
+      "devCmd": "cargo watch -x run",
+      "buildCmd": "cargo build --release",
+      "testCmd": "cargo test",
+      "lintConfig": "clippy"
+    },
+    "aspnet": {
+      "name": "ASP.NET",
+      "scaffoldType": "cli",
+      "scaffoldCmd": "dotnet new webapi --name {{name}} --no-https -o {{name}}",
+      "port": 5000,
+      "lang": "csharp",
+      "devCmd": "dotnet watch run",
+      "buildCmd": "dotnet publish -c Release",
+      "testCmd": "dotnet test",
+      "lintConfig": "dotnet-format"
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "scaffoldType": "cli",
+      "scaffoldCmd": "mix phx.new {{name}} --no-html --no-assets --no-mailer --no-dashboard",
+      "port": 4000,
+      "lang": "elixir",
+      "devCmd": "mix phx.server",
+      "buildCmd": "MIX_ENV=prod mix release",
+      "testCmd": "mix test",
+      "lintConfig": "mix-format"
     }
   },
   "mobile": {

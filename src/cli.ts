@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { ProjectConfig, Enhancement, ProjectType, MobileStack, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
+import { ProjectConfig, Enhancement, ProjectType, MobileStack, DatabaseChoice, AnalyticsProvider, ApiProtocol, QueueProvider } from "./types.js";
 
 type ParseResult = Partial<ProjectConfig> & { interactive: boolean; subcommand?: string; subcommandArgs?: string[] };
 
@@ -27,13 +27,14 @@ export function parseArgs(argv: string[]): ParseResult {
     .argument("[name]", "Project name")
     .option("--type <type>", "Project type: fullstack, frontend, backend, mobile, cli-lib")
     .option("--frontend <stack>", "Frontend stack: nextjs, react-vite, vue, svelte, angular")
-    .option("--backend <stack>", "Backend stack: fastapi, express, hono, django, go-chi, spring-boot")
+    .option("--backend <stack>", "Backend: fastapi, express, hono, django, go-chi, spring-boot, axum, aspnet, phoenix")
     .option("--mobile <stack>", "Mobile stack: react-native, flutter, swift, kotlin")
     .option("--standalone <stack>", "Standalone stack: python-cli, python-lib, node-cli")
     .option("--with <enhancements>", "Comma-separated enhancements")
     .option("--database <db>", "Database: postgres, mysql, sqlite, mongodb")
     .option("--analytics-provider <provider>", "Analytics: posthog, clevertap, moengage, mixpanel, segment")
     .option("--api-protocol <protocol>", "API protocol: graphql, grpc, graphql+grpc")
+    .option("--queue-provider <provider>", "Queue: rabbitmq, kafka")
     .option("--no-interactive", "Disable interactive prompts (for AI agents and scripts)")
     .parse(argv);
 
@@ -57,6 +58,7 @@ export function parseArgs(argv: string[]): ParseResult {
     database: opts.database as DatabaseChoice | undefined,
     analyticsProvider: opts.analyticsProvider as AnalyticsProvider | undefined,
     apiProtocol: opts.apiProtocol as ApiProtocol | undefined,
+    queueProvider: opts.queueProvider as QueueProvider | undefined,
     interactive: isInteractive,
   };
 }

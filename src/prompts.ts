@@ -8,6 +8,9 @@ export const BACKEND_STACK_OPTIONS = [
   { value: "django", label: "Django", hint: "Python" },
   { value: "go-chi", label: "Go (Chi)", hint: "Go" },
   { value: "spring-boot", label: "Spring Boot", hint: "Java" },
+  { value: "axum", label: "Axum", hint: "Rust" },
+  { value: "aspnet", label: "ASP.NET", hint: "C#" },
+  { value: "phoenix", label: "Phoenix", hint: "Elixir" },
 ] as const;
 
 const MOBILE_STACK_OPTIONS = [
@@ -139,6 +142,10 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
             { value: "analytics", label: "Analytics / Marketing SDK", hint: "PostHog, CleverTap, MoEngage, Mixpanel, Segment" },
             { value: "observability", label: "Observability stack", hint: "OpenTelemetry + Grafana + Prometheus + Tempo + Loki" },
             { value: "api-protocol", label: "API protocol layers", hint: "GraphQL (client), gRPC (internal)" },
+            { value: "cache", label: "Redis cache", hint: "caching + sessions" },
+            { value: "queue", label: "Message queue", hint: "RabbitMQ or Kafka" },
+            { value: "websocket", label: "WebSocket", hint: "real-time communication" },
+            { value: "storage", label: "S3 storage", hint: "file uploads with MinIO" },
           ],
           initialValues: ["docker", "ci", "lint", "test", "env", "ai-context", "api-wiring", "doctor"],
         })) as Enhancement[]);
