@@ -1,26 +1,21 @@
 import { Command } from "commander";
 import { ProjectConfig, Enhancement, ProjectType, MobileStack, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
 
-export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactive: boolean; subcommand?: string; subcommandArgs?: string[] } {
-  // Check for subcommands before commander parsing
-  const addIdx = argv.indexOf("add");
-  if (addIdx !== -1 && addIdx >= 2) {
-    return {
-      interactive: true,
-      subcommand: "add",
-      subcommandArgs: argv.slice(addIdx + 1),
-      enhancements: [],
-    };
-  }
+type ParseResult = Partial<ProjectConfig> & { interactive: boolean; subcommand?: string; subcommandArgs?: string[] };
 
-  const deployIdx = argv.indexOf("deploy");
-  if (deployIdx !== -1 && deployIdx >= 2) {
-    return {
-      interactive: true,
-      subcommand: "deploy",
-      subcommandArgs: argv.slice(deployIdx + 1),
-      enhancements: [],
-    };
+function trySubcommand(argv: string[], name: string): ParseResult | null {
+  const idx = argv.indexOf(name);
+  if (idx !== -1 && idx >= 2) {
+    return { interactive: true, subcommand: name, subcommandArgs: argv.slice(idx + 1), enhancements: [] };
+  }
+  return null;
+}
+
+export function parseArgs(argv: string[]): ParseResult {
+  // Check for subcommands before commander parsing
+  for (const cmd of ["add", "deploy"]) {
+    const result = trySubcommand(argv, cmd);
+    if (result) return result;
   }
 
   const program = new Command();

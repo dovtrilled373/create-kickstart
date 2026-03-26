@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
-import { DeployProvider, DatabaseChoice } from "./types.js";
+import { DeployProvider } from "./types.js";
 import { PRIMARY_BACKEND_NAME } from "./enhancers/utils.js";
 
 // ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ provider "aws" {
 `;
 }
 
-function awsVariables(projectName: string, db?: DatabaseChoice): string {
+function awsVariables(projectName: string): string {
   let vars = `variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -83,16 +83,6 @@ variable "desired_count" {
   default     = 1
 }
 `;
-
-  if (db && db !== "sqlite") {
-    vars += `
-variable "db_instance_class" {
-  description = "RDS/DocumentDB instance class"
-  type        = string
-  default     = "db.t3.micro"
-}
-`;
-  }
 
   return vars;
 }
@@ -608,12 +598,15 @@ output "acr_login_server" {
 // Public API
 // ---------------------------------------------------------------------------
 
+const CLOUD_NATIVE_PROVIDERS = new Set<DeployProvider>(["aws-ecs", "gcp-cloud-run", "azure-container-apps"]);
+
 export async function writeTerraform(
   projectRoot: string,
   projectName: string,
   provider: DeployProvider,
-  db?: DatabaseChoice,
 ): Promise<string[]> {
+  if (!CLOUD_NATIVE_PROVIDERS.has(provider)) return [];
+
   const files: string[] = [];
   const tfDir = path.join(projectRoot, "deploy", "terraform");
   await fs.ensureDir(tfDir);
@@ -622,7 +615,7 @@ export async function writeTerraform(
     case "aws-ecs": {
       const writes: [string, string][] = [
         ["main.tf", awsMain(projectName)],
-        ["variables.tf", awsVariables(projectName, db)],
+        ["variables.tf", awsVariables(projectName)],
         ["vpc.tf", awsVpc(projectName)],
         ["ecr.tf", awsEcr()],
         ["ecs.tf", awsEcs()],
@@ -646,9 +639,6 @@ export async function writeTerraform(
       await fs.writeFile(path.join(tfDir, "main.tf"), azureMain(projectName));
       break;
     }
-    default:
-      // PaaS and K8s don't need Terraform
-      break;
   }
 
   return files;

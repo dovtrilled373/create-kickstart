@@ -733,6 +733,10 @@ kubectl apply -f deploy/k8s/
 echo ""
 echo "Deploy complete! Run 'kubectl get pods' to check status."
 `;
+    default: {
+      const _exhaustive: never = provider;
+      throw new Error(`Unknown deploy provider: ${_exhaustive}`);
+    }
   }
 }
 
@@ -747,26 +751,27 @@ export async function runDeploy(argv: string[]): Promise<void> {
 
   let provider: DeployProvider;
   if (args.provider) {
+    if (!(args.provider in PROVIDERS)) {
+      p.cancel(`Unknown provider: ${args.provider}. Valid: ${Object.keys(PROVIDERS).join(", ")}`);
+      process.exit(1);
+    }
     provider = args.provider;
   } else if (args.interactive) {
     const result = await p.select({
       message: "Pick your deployment platform:",
       options: [
-        { value: "divider-paas", label: "── PaaS (Easy, great for POCs) ──" },
-        { value: "railway", label: "Railway", hint: PROVIDERS.railway.hint },
+        { value: "railway", label: "Railway", hint: "── PaaS ── " + PROVIDERS.railway.hint },
         { value: "render", label: "Render", hint: PROVIDERS.render.hint },
         { value: "fly-io", label: "Fly.io", hint: PROVIDERS["fly-io"].hint },
         { value: "vercel", label: "Vercel", hint: PROVIDERS.vercel.hint },
-        { value: "divider-cloud", label: "── Cloud-native (Production) ──" },
-        { value: "aws-ecs", label: "AWS ECS (Fargate)", hint: PROVIDERS["aws-ecs"].hint },
+        { value: "aws-ecs", label: "AWS ECS (Fargate)", hint: "── Cloud ── " + PROVIDERS["aws-ecs"].hint },
         { value: "gcp-cloud-run", label: "GCP Cloud Run", hint: PROVIDERS["gcp-cloud-run"].hint },
         { value: "azure-container-apps", label: "Azure Container Apps", hint: PROVIDERS["azure-container-apps"].hint },
-        { value: "divider-k8s", label: "── Kubernetes ──" },
-        { value: "kubernetes", label: "Kubernetes", hint: PROVIDERS.kubernetes.hint },
+        { value: "kubernetes", label: "Kubernetes", hint: "── K8s ── " + PROVIDERS.kubernetes.hint },
       ],
-    }) as DeployProvider;
+    });
     if (p.isCancel(result)) process.exit(0);
-    provider = result;
+    provider = result as DeployProvider;
   } else {
     p.cancel("--provider is required in non-interactive mode");
     process.exit(1);
@@ -830,17 +835,22 @@ export async function runDeploy(argv: string[]): Promise<void> {
     }
     case "kubernetes": {
       const k8sDir = path.join(deployDir, "k8s");
-      await fs.ensureDir(k8sDir);
-      await fs.writeFile(path.join(k8sDir, "deployment.yaml"), k8sDeployment(projectName));
-      await fs.writeFile(path.join(k8sDir, "service.yaml"), k8sService(projectName));
-      await fs.writeFile(path.join(k8sDir, "ingress.yaml"), k8sIngress(projectName));
-
-      // Helm chart
       const helmDir = path.join(deployDir, "helm", projectName);
-      await fs.ensureDir(path.join(helmDir, "templates"));
-      await fs.writeFile(path.join(helmDir, "Chart.yaml"), helmChart(projectName));
-      await fs.writeFile(path.join(helmDir, "values.yaml"), helmValues(projectName));
-      await fs.copy(k8sDir, path.join(helmDir, "templates"));
+      const helmTemplatesDir = path.join(helmDir, "templates");
+      await Promise.all([fs.ensureDir(k8sDir), fs.ensureDir(helmTemplatesDir)]);
+
+      // Write manifests to both k8s/ and helm/templates/ directly (avoid fs.copy read-back)
+      const manifests: [string, string][] = [
+        ["deployment.yaml", k8sDeployment(projectName)],
+        ["service.yaml", k8sService(projectName)],
+        ["ingress.yaml", k8sIngress(projectName)],
+      ];
+      await Promise.all([
+        ...manifests.map(([name, content]) => fs.writeFile(path.join(k8sDir, name), content)),
+        ...manifests.map(([name, content]) => fs.writeFile(path.join(helmTemplatesDir, name), content)),
+        fs.writeFile(path.join(helmDir, "Chart.yaml"), helmChart(projectName)),
+        fs.writeFile(path.join(helmDir, "values.yaml"), helmValues(projectName)),
+      ]);
       break;
     }
   }
