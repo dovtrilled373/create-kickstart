@@ -155,10 +155,6 @@ async function main() {
   await fs.writeFile(path.join(config.targetDir, "README.md"), readmeContent, "utf-8");
   readmeSpinner.stop("README.md generated");
 
-  // 7b. Clean up temp files
-  const dbMeta = path.join(config.targetDir, ".db-meta.json");
-  if (await fs.pathExists(dbMeta)) await fs.remove(dbMeta);
-
   // 8. Initialize git repo
   const gitSpinner = p.spinner();
   gitSpinner.start("Initializing git repository...");

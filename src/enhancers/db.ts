@@ -570,13 +570,6 @@ export async function enhanceDb(config: ProjectConfig, registry: Registry): Prom
     }
   }
 
-  // --- Export docker helpers for docker enhancer to use ---
-  // Write a .db-meta.json so docker enhancer can pick it up
-  await fs.writeJson(path.join(targetDir, ".db-meta.json"), {
-    database: db,
-    service: dockerComposeService(db),
-    volume: dockerComposeVolume(db),
-  });
 }
 
 // Re-export for docker enhancer

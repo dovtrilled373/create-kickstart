@@ -2,18 +2,13 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { resolveProjectDirs, autoRegisterFastapiRoute, autoRegisterExpressRoute } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // Seed data JSON (shared across stacks)
 // ---------------------------------------------------------------------------
 
-const SEED_ITEMS_JSON = `[
-  { "id": "1", "title": "Set up project", "description": "Initialize the repository and install dependencies", "completed": true },
-  { "id": "2", "title": "Design API", "description": "Define REST endpoints and data models", "completed": true },
-  { "id": "3", "title": "Build frontend", "description": "Create the user interface components", "completed": false },
-  { "id": "4", "title": "Write tests", "description": "Add unit and integration tests", "completed": false },
-  { "id": "5", "title": "Deploy to production", "description": "Set up CI/CD and deploy", "completed": false }
-]`;
+// Seed data is embedded directly in each backend-specific router function
 
 // ---------------------------------------------------------------------------
 // Backend: FastAPI
@@ -567,9 +562,7 @@ export async function enhanceSampleCrud(
 ): Promise<void> {
   const feStack = config.frontend;
   const beStack = config.backend;
-  const isFullstack = config.type === "fullstack";
-  const feDir = isFullstack ? path.join(config.targetDir, "frontend") : config.targetDir;
-  const beDir = isFullstack ? path.join(config.targetDir, "backend") : config.targetDir;
+  const { feDir, beDir } = resolveProjectDirs(config);
 
   // --- A) Backend CRUD endpoints ---
   if (beStack) {
@@ -582,7 +575,7 @@ export async function enhanceSampleCrud(
         await fs.writeFile(path.join(beDir, "app", "routes", "__init__.py"), "");
         await fs.writeFile(path.join(beDir, "app", "routes", "items.py"), fastapiItemsRouter());
         // Auto-register router in main.py
-        await autoRegisterFastapiRouter(beDir);
+        await autoRegisterFastapiRoute(beDir, "from app.routes.items import router as items_router", "app.include_router(items_router)");
         break;
       }
       case "express": {
@@ -591,7 +584,7 @@ export async function enhanceSampleCrud(
         await fs.writeFile(path.join(beDir, "src", "types", "item.ts"), expressItemType());
         await fs.writeFile(path.join(beDir, "src", "routes", "items.ts"), expressItemsRouter());
         // Auto-register router in index.ts
-        await autoRegisterExpressRouter(beDir);
+        await autoRegisterExpressRoute(beDir, 'import itemsRouter from "./routes/items.js";', 'app.use("/api/items", itemsRouter);');
         break;
       }
       case "go-chi": {
@@ -620,80 +613,5 @@ export async function enhanceSampleCrud(
         await fs.writeFile(path.join(compDir, "ItemList.svelte"), svelteItemList());
         break;
     }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Auto-register routers into the main app file
-// ---------------------------------------------------------------------------
-
-async function autoRegisterFastapiRouter(beDir: string): Promise<void> {
-  const mainPath = path.join(beDir, "app", "main.py");
-  if (!(await fs.pathExists(mainPath))) return;
-
-  let content = await fs.readFile(mainPath, "utf-8");
-
-  // Add import if not already there
-  if (!content.includes("from app.routes.items")) {
-    // Insert import after existing imports
-    const importLine = "from app.routes.items import router as items_router\n";
-    const registerLine = "app.include_router(items_router)\n";
-
-    // Add import at top after last import
-    const lines = content.split("\n");
-    let lastImportIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith("from ") || lines[i].startsWith("import ")) {
-        lastImportIdx = i;
-      }
-    }
-    if (lastImportIdx >= 0) {
-      lines.splice(lastImportIdx + 1, 0, importLine);
-    } else {
-      lines.unshift(importLine);
-    }
-
-    // Add include_router after app = FastAPI(...)
-    content = lines.join("\n");
-    content = content.replace(
-      /(app\s*=\s*FastAPI\([^)]*\))/,
-      `$1\n\n${registerLine}`,
-    );
-
-    await fs.writeFile(mainPath, content);
-  }
-}
-
-async function autoRegisterExpressRouter(beDir: string): Promise<void> {
-  const indexPath = path.join(beDir, "src", "index.ts");
-  if (!(await fs.pathExists(indexPath))) return;
-
-  let content = await fs.readFile(indexPath, "utf-8");
-
-  if (!content.includes("routes/items")) {
-    // Add import at top
-    const importLine = 'import itemsRouter from "./routes/items.js";\n';
-
-    // Add import after last import
-    const lines = content.split("\n");
-    let lastImportIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].startsWith("import ")) {
-        lastImportIdx = i;
-      }
-    }
-    if (lastImportIdx >= 0) {
-      lines.splice(lastImportIdx + 1, 0, importLine);
-    }
-
-    content = lines.join("\n");
-
-    // Mount router before app.listen
-    content = content.replace(
-      /(app\.listen)/,
-      'app.use("/api/items", itemsRouter);\n\n$1',
-    );
-
-    await fs.writeFile(indexPath, content);
   }
 }

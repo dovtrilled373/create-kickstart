@@ -37,8 +37,10 @@ export async function enhanceEnv(config: ProjectConfig, registry: Registry): Pro
   // DB env vars are added by the db enhancer with the correct database type
 
   const content = lines.join("\n") + "\n";
-  await fs.writeFile(path.join(targetDir, ".env.example"), content);
-  await fs.writeFile(path.join(targetDir, ".env"), content);
+  await Promise.all([
+    fs.writeFile(path.join(targetDir, ".env.example"), content),
+    fs.writeFile(path.join(targetDir, ".env"), content),
+  ]);
 
   // Ensure .env is in .gitignore
   const gitignorePath = path.join(targetDir, ".gitignore");

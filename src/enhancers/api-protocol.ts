@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry, ApiProtocol } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { resolveProjectDirs, appendEnvVars } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // GraphQL — client-facing layer
@@ -397,8 +398,7 @@ function grpcGoServer(): string {
 
 export async function enhanceApiProtocol(config: ProjectConfig, registry: Registry): Promise<void> {
   const protocol = config.apiProtocol ?? "graphql";
-  const isFullstack = config.type === "fullstack";
-  const beDir = isFullstack ? path.join(config.targetDir, "backend") : config.targetDir;
+  const { beDir } = resolveProjectDirs(config);
 
   const doGraphql = protocol === "graphql" || protocol === "graphql+grpc";
   const doGrpc = protocol === "grpc" || protocol === "graphql+grpc";
@@ -447,12 +447,6 @@ export async function enhanceApiProtocol(config: ProjectConfig, registry: Regist
     }
 
     // Add gRPC port to .env
-    const envExample = path.join(config.targetDir, ".env.example");
-    if (await fs.pathExists(envExample)) {
-      const contents = await fs.readFile(envExample, "utf-8");
-      if (!contents.includes("GRPC_PORT")) {
-        await fs.appendFile(envExample, "\n# gRPC (internal)\nGRPC_PORT=50051\n");
-      }
-    }
+    await appendEnvVars(config.targetDir, "GRPC_PORT", "\n# gRPC (internal)\nGRPC_PORT=50051\n");
   }
 }

@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import path from "path";
 import { AddServiceConfig, BackendStack, Enhancement, DatabaseChoice } from "./types.js";
 import { loadRegistry, getRegistryEntry } from "./registry.js";
+import { BACKEND_STACK_OPTIONS } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
 import { runEnhancers } from "./enhancers/index.js";
 import chalk from "chalk";
@@ -58,14 +59,7 @@ async function promptAddService(partial: Partial<AddServiceConfig>): Promise<Add
     partial.backend ??
     ((await p.select({
       message: "Pick the backend stack for this service:",
-      options: [
-        { value: "fastapi", label: "FastAPI", hint: "Python" },
-        { value: "express", label: "Express", hint: "TypeScript" },
-        { value: "hono", label: "Hono", hint: "TypeScript" },
-        { value: "django", label: "Django", hint: "Python" },
-        { value: "go-chi", label: "Go (Chi)", hint: "Go" },
-        { value: "spring-boot", label: "Spring Boot", hint: "Java" },
-      ],
+      options: [...BACKEND_STACK_OPTIONS],
     })) as BackendStack);
   if (p.isCancel(backend)) process.exit(0);
 
@@ -150,14 +144,12 @@ export async function runAddService(argv: string[]): Promise<void> {
   await scaffold(projectConfig, registry);
   await runEnhancers(projectConfig, registry);
 
-  // Update parent docker-compose.yml if it exists
-  await updateDockerCompose(addConfig.targetDir, addConfig.serviceName, port);
-
-  // Update parent Makefile if it exists
-  await updateMakefile(addConfig.targetDir, addConfig.serviceName, beEntry);
-
-  // Update parent CLAUDE.md if it exists
-  await updateClaudeMd(addConfig.targetDir, addConfig.serviceName, addConfig.backend, port);
+  // Update parent configs in parallel (independent files)
+  await Promise.all([
+    updateDockerCompose(addConfig.targetDir, addConfig.serviceName, port),
+    updateMakefile(addConfig.targetDir, addConfig.serviceName, beEntry),
+    updateClaudeMd(addConfig.targetDir, addConfig.serviceName, addConfig.backend, port),
+  ]);
 
   p.outro(chalk.green(`Service "${addConfig.serviceName}" added!`));
 

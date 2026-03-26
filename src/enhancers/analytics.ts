@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry, AnalyticsProvider } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { resolveProjectDirs, appendEnvVars } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // SDK init snippets per provider × platform
@@ -587,12 +588,11 @@ function getEnvVars(provider: AnalyticsProvider): string {
 export async function enhanceAnalytics(config: ProjectConfig, registry: Registry): Promise<void> {
   const provider = config.analyticsProvider ?? "posthog";
   const inits = getProviderInits(provider);
-  const isFullstack = config.type === "fullstack";
+  const { beDir, feDir, mobileDir } = resolveProjectDirs(config);
 
   // Backend
   if (config.backend) {
     const beEntry = getRegistryEntry(registry, "backend", config.backend);
-    const beDir = isFullstack ? path.join(config.targetDir, "backend") : config.targetDir;
 
     if (beEntry.lang === "python") {
       const libDir = path.join(beDir, "app", "lib");
@@ -611,7 +611,6 @@ export async function enhanceAnalytics(config: ProjectConfig, registry: Registry
 
   // Frontend
   if (config.frontend) {
-    const feDir = isFullstack ? path.join(config.targetDir, "frontend") : config.targetDir;
     const libDir = path.join(feDir, "src", "lib");
     await fs.ensureDir(libDir);
     await fs.writeFile(path.join(libDir, "analytics.ts"), inits.react());
@@ -619,30 +618,16 @@ export async function enhanceAnalytics(config: ProjectConfig, registry: Registry
 
   // Mobile
   if (config.mobile && inits.mobile) {
-    const mobileDir = isFullstack ? path.join(config.targetDir, "mobile") : config.targetDir;
     const libDir = path.join(mobileDir, "src", "lib");
     await fs.ensureDir(libDir);
     await fs.writeFile(path.join(libDir, "analytics.ts"), inits.mobile());
   }
 
-  // .env vars
-  const envExample = path.join(config.targetDir, ".env.example");
-  if (await fs.pathExists(envExample)) {
-    const contents = await fs.readFile(envExample, "utf-8");
-    if (!contents.includes(getEnvVarName(provider))) {
-      await fs.appendFile(envExample, `\n# Analytics (${provider})\n${getEnvVars(provider)}\n`);
-    }
-  }
-
-  // Frontend .env vars (VITE_ prefix)
-  if (config.frontend) {
-    const envExample2 = path.join(config.targetDir, ".env.example");
-    if (await fs.pathExists(envExample2)) {
-      const contents = await fs.readFile(envExample2, "utf-8");
-      const viteVar = `VITE_${getEnvVarName(provider)}`;
-      if (!contents.includes(viteVar)) {
-        await fs.appendFile(envExample2, `${viteVar}=your_key_here\n`);
-      }
-    }
-  }
+  // .env vars — single read, build all vars at once
+  const viteVar = config.frontend ? `\nVITE_${getEnvVarName(provider)}=your_key_here` : "";
+  await appendEnvVars(
+    config.targetDir,
+    getEnvVarName(provider),
+    `\n# Analytics (${provider})\n${getEnvVars(provider)}${viteVar}\n`,
+  );
 }

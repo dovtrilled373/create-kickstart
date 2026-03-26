@@ -2,14 +2,11 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { resolveProjectDirs, appendEnvVars, autoRegisterFastapiRoute } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // Backend: FastAPI
 // ---------------------------------------------------------------------------
-
-function fastapiAuthInit(): string {
-  return "";
-}
 
 function fastapiAuthModels(): string {
   return `from pydantic import BaseModel, EmailStr
@@ -589,9 +586,7 @@ export async function enhanceAuth(
 ): Promise<void> {
   const feStack = config.frontend;
   const beStack = config.backend;
-  const isFullstack = config.type === "fullstack";
-  const feDir = isFullstack ? path.join(config.targetDir, "frontend") : config.targetDir;
-  const beDir = isFullstack ? path.join(config.targetDir, "backend") : config.targetDir;
+  const { feDir, beDir } = resolveProjectDirs(config);
 
   // --- A) Backend auth endpoints ---
   if (beStack) {
@@ -601,7 +596,7 @@ export async function enhanceAuth(
       case "fastapi": {
         const authDir = path.join(beDir, "app", "auth");
         await fs.ensureDir(authDir);
-        await fs.writeFile(path.join(authDir, "__init__.py"), fastapiAuthInit());
+        await fs.writeFile(path.join(authDir, "__init__.py"), "");
         await fs.writeFile(path.join(authDir, "models.py"), fastapiAuthModels());
         await fs.writeFile(path.join(authDir, "router.py"), fastapiAuthRouter());
 
@@ -614,7 +609,7 @@ export async function enhanceAuth(
           }
         }
         // Auto-register auth router in main.py
-        await autoRegisterFastapiAuth(beDir);
+        await autoRegisterFastapiRoute(beDir, "from app.auth.router import router as auth_router", "app.include_router(auth_router)");
         break;
       }
       case "express":
@@ -672,58 +667,6 @@ export async function enhanceAuth(
     }
   }
 
-  // --- C) Append JWT_SECRET to .env.example if it exists ---
-  const envExample = path.join(config.targetDir, ".env.example");
-  if (await fs.pathExists(envExample)) {
-    const contents = await fs.readFile(envExample, "utf-8");
-    if (!contents.includes("JWT_SECRET")) {
-      await fs.appendFile(envExample, "\nJWT_SECRET=change-me-in-production\n");
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Auto-register auth router in main.py
-// ---------------------------------------------------------------------------
-
-async function autoRegisterFastapiAuth(beDir: string): Promise<void> {
-  const mainPath = path.join(beDir, "app", "main.py");
-  if (!(await fs.pathExists(mainPath))) return;
-
-  let content = await fs.readFile(mainPath, "utf-8");
-  if (content.includes("from app.auth.router")) return;
-
-  const importLine = "from app.auth.router import router as auth_router";
-  const registerLine = "app.include_router(auth_router)";
-
-  // Add import after last import line
-  const lines = content.split("\n");
-  let lastImportIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith("from ") || lines[i].startsWith("import ")) {
-      lastImportIdx = i;
-    }
-  }
-  if (lastImportIdx >= 0) {
-    lines.splice(lastImportIdx + 1, 0, importLine);
-  } else {
-    lines.unshift(importLine);
-  }
-
-  // Add include_router after app = FastAPI(...)
-  content = lines.join("\n");
-  content = content.replace(
-    /(app\.include_router\([^)]+\)\n)/,
-    `$1${registerLine}\n`,
-  );
-
-  // If no include_router exists yet, add after app = FastAPI(...)
-  if (!content.includes(registerLine)) {
-    content = content.replace(
-      /(app\s*=\s*FastAPI\([^)]*\))/,
-      `$1\n\n${registerLine}`,
-    );
-  }
-
-  await fs.writeFile(mainPath, content);
+  // --- C) Append JWT_SECRET to .env.example ---
+  await appendEnvVars(config.targetDir, "JWT_SECRET", "\nJWT_SECRET=change-me-in-production\n");
 }

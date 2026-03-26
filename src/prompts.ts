@@ -1,6 +1,22 @@
 import * as p from "@clack/prompts";
 import { ProjectConfig, ProjectType, FrontendStack, BackendStack, MobileStack, StandaloneStack, Enhancement, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
 
+export const BACKEND_STACK_OPTIONS = [
+  { value: "fastapi", label: "FastAPI", hint: "Python" },
+  { value: "express", label: "Express", hint: "TypeScript" },
+  { value: "hono", label: "Hono", hint: "TypeScript, lightweight" },
+  { value: "django", label: "Django", hint: "Python" },
+  { value: "go-chi", label: "Go (Chi)", hint: "Go" },
+  { value: "spring-boot", label: "Spring Boot", hint: "Java" },
+] as const;
+
+const MOBILE_STACK_OPTIONS = [
+  { value: "react-native", label: "React Native", hint: "TypeScript" },
+  { value: "flutter", label: "Flutter", hint: "Dart" },
+  { value: "swift", label: "Swift (iOS)", hint: "SwiftUI" },
+  { value: "kotlin", label: "Kotlin (Android)", hint: "Jetpack Compose" },
+] as const;
+
 export async function runPrompts(partial: Partial<ProjectConfig>): Promise<ProjectConfig> {
   const name =
     partial.name ??
@@ -52,14 +68,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
   if ((type === "fullstack" || type === "backend") && !backend) {
     backend = (await p.select({
       message: "Pick your backend:",
-      options: [
-        { value: "fastapi", label: "FastAPI", hint: "Python" },
-        { value: "express", label: "Express", hint: "TypeScript" },
-        { value: "hono", label: "Hono", hint: "TypeScript, lightweight" },
-        { value: "django", label: "Django", hint: "Python" },
-        { value: "go-chi", label: "Go (Chi)", hint: "Go" },
-        { value: "spring-boot", label: "Spring Boot", hint: "Java" },
-      ],
+      options: [...BACKEND_STACK_OPTIONS],
     })) as BackendStack;
     if (p.isCancel(backend)) process.exit(0);
   }
@@ -68,12 +77,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
   if (type === "mobile" && !mobile) {
     mobile = (await p.select({
       message: "Pick your mobile stack:",
-      options: [
-        { value: "react-native", label: "React Native", hint: "TypeScript" },
-        { value: "flutter", label: "Flutter", hint: "Dart" },
-        { value: "swift", label: "Swift (iOS)", hint: "SwiftUI" },
-        { value: "kotlin", label: "Kotlin (Android)", hint: "Jetpack Compose" },
-      ],
+      options: [...MOBILE_STACK_OPTIONS],
     })) as MobileStack;
     if (p.isCancel(mobile)) process.exit(0);
   }

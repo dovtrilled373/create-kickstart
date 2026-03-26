@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 export async function loadRegistry(): Promise<Registry> {
   // Try remote first, fall back to local bundled copy
   try {
-    const response = await fetch(REGISTRY_URL);
+    const response = await fetch(REGISTRY_URL, { signal: AbortSignal.timeout(3000) });
     if (response.ok) {
       return (await response.json()) as Registry;
     }

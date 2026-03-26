@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import { ProjectConfig, Registry } from "../types.js";
 import { getRegistryEntry } from "../registry.js";
+import { resolveProjectDirs, appendEnvVars } from "./utils.js";
 
 // ---------------------------------------------------------------------------
 // OpenTelemetry SDK init per language
@@ -332,12 +333,11 @@ datasources:
 // ---------------------------------------------------------------------------
 
 export async function enhanceObservability(config: ProjectConfig, registry: Registry): Promise<void> {
-  const isFullstack = config.type === "fullstack";
+  const { beDir } = resolveProjectDirs(config);
 
   // 1. Write OTel SDK init per backend
   if (config.backend) {
     const beEntry = getRegistryEntry(registry, "backend", config.backend);
-    const beDir = isFullstack ? path.join(config.targetDir, "backend") : config.targetDir;
 
     if (beEntry.lang === "python") {
       const libDir = path.join(beDir, "app", "lib");
@@ -395,14 +395,9 @@ export async function enhanceObservability(config: ProjectConfig, registry: Regi
   }
 
   // 4. Add env vars
-  const envExample = path.join(config.targetDir, ".env.example");
-  if (await fs.pathExists(envExample)) {
-    const contents = await fs.readFile(envExample, "utf-8");
-    if (!contents.includes("OTEL_SERVICE_NAME")) {
-      await fs.appendFile(envExample, `\n# Observability (OpenTelemetry)
-OTEL_SERVICE_NAME=${config.name}
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-`);
-    }
-  }
+  await appendEnvVars(
+    config.targetDir,
+    "OTEL_SERVICE_NAME",
+    `\n# Observability (OpenTelemetry)\nOTEL_SERVICE_NAME=${config.name}\nOTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317\n`,
+  );
 }
