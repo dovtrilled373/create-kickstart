@@ -68,6 +68,52 @@ function javaJob(name: string, workingDir?: string): string {
 `;
 }
 
+function rustJob(name: string, workingDir?: string): string {
+  const wd = workingDir ? `\n        working-directory: ${workingDir}` : "";
+  return `  ${name}:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo test${wd}
+      - run: cargo clippy -- -D warnings${wd}
+      - run: cargo fmt --check${wd}
+`;
+}
+
+function csharpJob(name: string, workingDir?: string): string {
+  const wd = workingDir ? `\n        working-directory: ${workingDir}` : "";
+  return `  ${name}:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0"
+      - run: dotnet restore${wd}
+      - run: dotnet test${wd}
+      - run: dotnet format --verify-no-changes${wd}
+`;
+}
+
+function elixirJob(name: string, workingDir?: string): string {
+  const wd = workingDir ? `\n        working-directory: ${workingDir}` : "";
+  return `  ${name}:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.16"
+          otp-version: "26"
+      - run: mix deps.get${wd}
+      - run: mix test${wd}
+      - run: mix format --check-formatted${wd}
+`;
+}
+
 function jobForLang(name: string, lang: string, testCmd: string, workingDir?: string): string {
   switch (lang) {
     case "python":
@@ -76,6 +122,12 @@ function jobForLang(name: string, lang: string, testCmd: string, workingDir?: st
       return goJob(name, workingDir);
     case "java":
       return javaJob(name, workingDir);
+    case "rust":
+      return rustJob(name, workingDir);
+    case "csharp":
+      return csharpJob(name, workingDir);
+    case "elixir":
+      return elixirJob(name, workingDir);
     default:
       return nodeJob(name, workingDir);
   }

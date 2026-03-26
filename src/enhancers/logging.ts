@@ -110,6 +110,84 @@ func Get() zerolog.Logger {
 }
 
 // ---------------------------------------------------------------------------
+// Rust logging (Axum — tracing + tracing-subscriber)
+// ---------------------------------------------------------------------------
+
+function rustLogger(): string {
+  return `use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+
+pub fn setup_logging() {
+    let env_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let json_layer = if std::env::var("LOG_FORMAT").unwrap_or_default() == "json" {
+        Some(fmt::layer().json().flatten_event(true))
+    } else {
+        None
+    };
+
+    let pretty_layer = if json_layer.is_none() {
+        Some(fmt::layer().pretty())
+    } else {
+        None
+    };
+
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(json_layer)
+        .with(pretty_layer)
+        .init();
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// C# logging (ASP.NET — Serilog)
+// ---------------------------------------------------------------------------
+
+function csharpLogger(): string {
+  return `using Serilog;
+using Serilog.Events;
+
+public static class LoggingConfig
+{
+    public static void Setup()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console(outputTemplate:
+                Environment.GetEnvironmentVariable("LOG_FORMAT") == "json"
+                    ? null
+                    : "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+            .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter(),
+                standardErrorFromLevel: null)
+            .CreateLogger();
+    }
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Elixir logging (Phoenix — Logger JSON)
+// ---------------------------------------------------------------------------
+
+function elixirLogger(): string {
+  return `# Logger configuration for JSON output
+# Import this file in your config/config.exs:
+#   import_config "logger.exs"
+
+config :logger, :console,
+  format: {LoggerJSON.Formatters.Basic, :format},
+  metadata: [:request_id, :module, :function]
+
+config :logger,
+  level: String.to_atom(System.get_env("LOG_LEVEL", "info"))
+`;
+}
+
+// ---------------------------------------------------------------------------
 // Frontend error boundaries
 // ---------------------------------------------------------------------------
 
@@ -229,6 +307,28 @@ export async function enhanceLogging(config: ProjectConfig, registry: Registry):
     } else if (beEntry.lang === "go") {
       await fs.ensureDir(path.join(beDir, "internal", "logger"));
       await fs.writeFile(path.join(beDir, "internal", "logger", "logger.go"), goLogger());
+    } else if (beEntry.lang === "rust") {
+      // Add tracing config to src/logging.rs
+      await fs.ensureDir(path.join(beDir, "src"));
+      await fs.writeFile(path.join(beDir, "src", "logging.rs"), rustLogger());
+
+      // Add dependencies to Cargo.toml if it exists
+      const cargoFile = path.join(beDir, "Cargo.toml");
+      if (await fs.pathExists(cargoFile)) {
+        const contents = await fs.readFile(cargoFile, "utf-8");
+        if (!contents.includes("tracing")) {
+          await fs.appendFile(cargoFile, `\ntracing = "0.1"\ntracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }\n`);
+        }
+      }
+    } else if (beEntry.lang === "csharp") {
+      // Write Serilog config helper
+      await fs.ensureDir(beDir);
+      await fs.writeFile(path.join(beDir, "LoggingConfig.cs"), csharpLogger());
+    } else if (beEntry.lang === "elixir") {
+      // Write Logger JSON config to config/
+      const configDir = path.join(beDir, "config");
+      await fs.ensureDir(configDir);
+      await fs.writeFile(path.join(configDir, "logger.exs"), elixirLogger());
     }
   }
 

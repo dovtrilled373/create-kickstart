@@ -83,6 +83,64 @@ CMD ["java", "-jar", "app.jar"]
 `;
 }
 
+function rustDockerfile(port: number): string {
+  return `# Stage 1: Build
+FROM rust:1.78-slim AS builder
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release && rm -rf src
+COPY . .
+RUN cargo build --release
+
+# Stage 2: Production
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /app/target/release/app ./app
+EXPOSE ${port}
+CMD ["./app"]
+`;
+}
+
+function csharpDockerfile(port: number): string {
+  return `# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
+WORKDIR /app
+COPY *.csproj ./
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /out
+
+# Stage 2: Production
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=builder /out .
+EXPOSE ${port}
+CMD ["dotnet", "app.dll"]
+`;
+}
+
+function elixirDockerfile(port: number): string {
+  return `# Stage 1: Build
+FROM elixir:1.16-slim AS builder
+ENV MIX_ENV=prod
+WORKDIR /app
+RUN mix local.hex --force && mix local.rebar --force
+COPY mix.exs mix.lock ./
+RUN mix deps.get --only prod && mix deps.compile
+COPY . .
+RUN mix release
+
+# Stage 2: Production
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=builder /app/_build/prod/rel/app ./
+EXPOSE ${port}
+CMD ["bin/app", "start"]
+`;
+}
+
 function dockerignore(): string {
   return `node_modules
 dist
@@ -108,6 +166,12 @@ function getDockerfileForLang(lang: string, port: number): string {
       return goDockerfile(port);
     case "java":
       return javaDockerfile(port);
+    case "rust":
+      return rustDockerfile(port);
+    case "csharp":
+      return csharpDockerfile(port);
+    case "elixir":
+      return elixirDockerfile(port);
     default:
       return nodejsDockerfile(port);
   }

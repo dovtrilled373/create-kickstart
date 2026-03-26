@@ -70,6 +70,69 @@ async function ensureTestInfra(dir: string, stackKey: string, lang: string): Pro
     }
   }
 
+  // Rust: create tests/health_test.rs
+  if (lang === "rust") {
+    const testsDir = path.join(dir, "tests");
+    await fs.ensureDir(testsDir);
+
+    const testPath = path.join(testsDir, "health_test.rs");
+    if (!(await fs.pathExists(testPath))) {
+      await fs.writeFile(
+        testPath,
+        `#[test]
+fn health_check() {
+    assert_eq!(1 + 1, 2, "basic health check");
+}
+`,
+      );
+    }
+  }
+
+  // C#: create a test file
+  if (lang === "csharp") {
+    const testsDir = path.join(dir, "Tests");
+    await fs.ensureDir(testsDir);
+
+    const testPath = path.join(testsDir, "HealthTest.cs");
+    if (!(await fs.pathExists(testPath))) {
+      await fs.writeFile(
+        testPath,
+        `using Xunit;
+
+public class HealthTest
+{
+    [Fact]
+    public void HealthCheck_ReturnsTrue()
+    {
+        Assert.True(true, "basic health check");
+    }
+}
+`,
+      );
+    }
+  }
+
+  // Elixir: create test/app_test.exs
+  if (lang === "elixir") {
+    const testsDir = path.join(dir, "test");
+    await fs.ensureDir(testsDir);
+
+    const testPath = path.join(testsDir, "app_test.exs");
+    if (!(await fs.pathExists(testPath))) {
+      await fs.writeFile(
+        testPath,
+        `defmodule AppTest do
+  use ExUnit.Case
+
+  test "health check" do
+    assert 1 + 1 == 2
+  end
+end
+`,
+      );
+    }
+  }
+
   // Python: ensure tests/ dir + conftest.py
   if (lang === "python") {
     const testsDir = path.join(dir, "tests");

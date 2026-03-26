@@ -315,6 +315,265 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---------------------------------------------------------------------------
+// Backend: Axum (Rust)
+// ---------------------------------------------------------------------------
+
+function axumItemsHandler(): string {
+  return `use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    routing::{get, post},
+    Json, Router,
+};
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Item {
+    pub id: String,
+    pub title: String,
+    pub description: String,
+    pub completed: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ItemCreate {
+    pub title: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub completed: bool,
+}
+
+pub type ItemStore = Arc<Mutex<Vec<Item>>>;
+
+fn seed_items() -> Vec<Item> {
+    vec![
+        Item { id: "1".into(), title: "Set up project".into(), description: "Initialize the repository and install dependencies".into(), completed: true },
+        Item { id: "2".into(), title: "Design API".into(), description: "Define REST endpoints and data models".into(), completed: true },
+        Item { id: "3".into(), title: "Build frontend".into(), description: "Create the user interface components".into(), completed: false },
+        Item { id: "4".into(), title: "Write tests".into(), description: "Add unit and integration tests".into(), completed: false },
+        Item { id: "5".into(), title: "Deploy to production".into(), description: "Set up CI/CD and deploy".into(), completed: false },
+    ]
+}
+
+pub fn items_router() -> Router {
+    let store: ItemStore = Arc::new(Mutex::new(seed_items()));
+    Router::new()
+        .route("/", get(list_items).post(create_item))
+        .route("/:id", get(get_item).put(update_item).delete(delete_item))
+        .with_state(store)
+}
+
+async fn list_items(State(store): State<ItemStore>) -> Json<Vec<Item>> {
+    let items = store.lock().unwrap();
+    Json(items.clone())
+}
+
+async fn create_item(
+    State(store): State<ItemStore>,
+    Json(payload): Json<ItemCreate>,
+) -> (StatusCode, Json<Item>) {
+    let item = Item {
+        id: Uuid::new_v4().to_string(),
+        title: payload.title,
+        description: payload.description,
+        completed: payload.completed,
+    };
+    store.lock().unwrap().push(item.clone());
+    (StatusCode::CREATED, Json(item))
+}
+
+async fn get_item(
+    State(store): State<ItemStore>,
+    Path(id): Path<String>,
+) -> Result<Json<Item>, StatusCode> {
+    let items = store.lock().unwrap();
+    items.iter().find(|i| i.id == id).cloned()
+        .map(Json)
+        .ok_or(StatusCode::NOT_FOUND)
+}
+
+async fn update_item(
+    State(store): State<ItemStore>,
+    Path(id): Path<String>,
+    Json(payload): Json<ItemCreate>,
+) -> Result<Json<Item>, StatusCode> {
+    let mut items = store.lock().unwrap();
+    if let Some(item) = items.iter_mut().find(|i| i.id == id) {
+        item.title = payload.title;
+        item.description = payload.description;
+        item.completed = payload.completed;
+        Ok(Json(item.clone()))
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
+}
+
+async fn delete_item(
+    State(store): State<ItemStore>,
+    Path(id): Path<String>,
+) -> StatusCode {
+    let mut items = store.lock().unwrap();
+    let len = items.len();
+    items.retain(|i| i.id != id);
+    if items.len() < len { StatusCode::NO_CONTENT } else { StatusCode::NOT_FOUND }
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Backend: ASP.NET (C#)
+// ---------------------------------------------------------------------------
+
+function aspnetItemsEndpoints(): string {
+  return `using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+
+public record Item(string Id, string Title, string Description, bool Completed);
+public record ItemCreate(string Title, string Description = "", bool Completed = false);
+
+public static class ItemsEndpoints
+{
+    private static readonly List<Item> _items = new()
+    {
+        new("1", "Set up project", "Initialize the repository and install dependencies", true),
+        new("2", "Design API", "Define REST endpoints and data models", true),
+        new("3", "Build frontend", "Create the user interface components", false),
+        new("4", "Write tests", "Add unit and integration tests", false),
+        new("5", "Deploy to production", "Set up CI/CD and deploy", false),
+    };
+
+    public static void MapItemsEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/items");
+
+        group.MapGet("/", () => Results.Ok(_items));
+
+        group.MapGet("/{id}", (string id) =>
+        {
+            var item = _items.FirstOrDefault(i => i.Id == id);
+            return item is not null ? Results.Ok(item) : Results.NotFound();
+        });
+
+        group.MapPost("/", (ItemCreate payload) =>
+        {
+            var item = new Item(Guid.NewGuid().ToString(), payload.Title, payload.Description, payload.Completed);
+            _items.Add(item);
+            return Results.Created($"/api/items/{item.Id}", item);
+        });
+
+        group.MapPut("/{id}", (string id, ItemCreate payload) =>
+        {
+            var idx = _items.FindIndex(i => i.Id == id);
+            if (idx == -1) return Results.NotFound();
+            _items[idx] = new Item(id, payload.Title, payload.Description, payload.Completed);
+            return Results.Ok(_items[idx]);
+        });
+
+        group.MapDelete("/{id}", (string id) =>
+        {
+            var idx = _items.FindIndex(i => i.Id == id);
+            if (idx == -1) return Results.NotFound();
+            _items.RemoveAt(idx);
+            return Results.NoContent();
+        });
+    }
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Backend: Phoenix (Elixir)
+// ---------------------------------------------------------------------------
+
+function phoenixItemsController(): string {
+  return `defmodule AppWeb.ItemsController do
+  use AppWeb, :controller
+
+  @seed_items [
+    %{id: "1", title: "Set up project", description: "Initialize the repository and install dependencies", completed: true},
+    %{id: "2", title: "Design API", description: "Define REST endpoints and data models", completed: true},
+    %{id: "3", title: "Build frontend", description: "Create the user interface components", completed: false},
+    %{id: "4", title: "Write tests", description: "Add unit and integration tests", completed: false},
+    %{id: "5", title: "Deploy to production", description: "Set up CI/CD and deploy", completed: false},
+  ]
+
+  def start_link(_opts) do
+    Agent.start_link(fn -> @seed_items end, name: __MODULE__)
+  end
+
+  def init(_) do
+    unless Process.whereis(__MODULE__) do
+      Agent.start_link(fn -> @seed_items end, name: __MODULE__)
+    end
+    :ok
+  end
+
+  def index(conn, _params) do
+    items = Agent.get(__MODULE__, & &1)
+    json(conn, items)
+  end
+
+  def show(conn, %{"id" => id}) do
+    case find_item(id) do
+      nil -> conn |> put_status(:not_found) |> json(%{error: "Item not found"})
+      item -> json(conn, item)
+    end
+  end
+
+  def create(conn, params) do
+    item = %{
+      id: Ecto.UUID.generate(),
+      title: params["title"],
+      description: params["description"] || "",
+      completed: params["completed"] || false
+    }
+    Agent.update(__MODULE__, fn items -> items ++ [item] end)
+    conn |> put_status(:created) |> json(item)
+  end
+
+  def update(conn, %{"id" => id} = params) do
+    case find_item(id) do
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Item not found"})
+      _item ->
+        updated = %{
+          id: id,
+          title: params["title"],
+          description: params["description"] || "",
+          completed: params["completed"] || false
+        }
+        Agent.update(__MODULE__, fn items ->
+          Enum.map(items, fn i -> if i.id == id, do: updated, else: i end)
+        end)
+        json(conn, updated)
+    end
+  end
+
+  def delete(conn, %{"id" => id}) do
+    case find_item(id) do
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Item not found"})
+      _item ->
+        Agent.update(__MODULE__, fn items ->
+          Enum.reject(items, fn i -> i.id == id end)
+        end)
+        send_resp(conn, :no_content, "")
+    end
+  end
+
+  defp find_item(id) do
+    Agent.get(__MODULE__, fn items ->
+      Enum.find(items, fn i -> i.id == id end)
+    end)
+  end
+end
+`;
+}
+
+// ---------------------------------------------------------------------------
 // Frontend components
 // ---------------------------------------------------------------------------
 
@@ -591,6 +850,40 @@ export async function enhanceSampleCrud(
         await fs.ensureDir(path.join(beDir, "internal", "items"));
         await fs.writeFile(path.join(beDir, "internal", "items", "model.go"), goChiItemModel());
         await fs.writeFile(path.join(beDir, "internal", "items", "handler.go"), goChiItemHandler());
+        break;
+      }
+      case "axum": {
+        await fs.ensureDir(path.join(beDir, "src", "routes"));
+        await fs.writeFile(path.join(beDir, "src", "routes", "items.rs"), axumItemsHandler());
+
+        // Add mod routes; to main.rs if it exists
+        const mainRs = path.join(beDir, "src", "main.rs");
+        if (await fs.pathExists(mainRs)) {
+          let content = await fs.readFile(mainRs, "utf-8");
+          if (!content.includes("mod routes")) {
+            content = `mod routes;\n\n${content}`;
+            await fs.writeFile(mainRs, content);
+          }
+        }
+
+        // Ensure routes/mod.rs exists
+        const modRs = path.join(beDir, "src", "routes", "mod.rs");
+        if (!(await fs.pathExists(modRs))) {
+          await fs.writeFile(modRs, "pub mod items;\n");
+        }
+        break;
+      }
+      case "aspnet": {
+        await fs.ensureDir(path.join(beDir, "Endpoints"));
+        await fs.writeFile(path.join(beDir, "Endpoints", "ItemsEndpoints.cs"), aspnetItemsEndpoints());
+        break;
+      }
+      case "phoenix": {
+        await fs.ensureDir(path.join(beDir, "lib", "app_web", "controllers"));
+        await fs.writeFile(
+          path.join(beDir, "lib", "app_web", "controllers", "items_controller.ex"),
+          phoenixItemsController(),
+        );
         break;
       }
     }

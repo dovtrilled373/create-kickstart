@@ -69,6 +69,23 @@ export async function enhanceDoctor(
     checks.push(`check "Maven" "mvn" "3"`);
   }
 
+  // Rust
+  if (langs.has("rust")) {
+    checks.push(`check "Rust" "rustc" "1.75"`);
+    checks.push(`check "Cargo" "cargo" "1.75"`);
+  }
+
+  // C#
+  if (langs.has("csharp")) {
+    checks.push(`check ".NET SDK" "dotnet" "8.0"`);
+  }
+
+  // Elixir
+  if (langs.has("elixir")) {
+    checks.push(`check "Elixir" "elixir" "1.16"`);
+    checks.push(`check "Mix" "mix" "1.16"`);
+  }
+
   // Docker (if enhancement is enabled)
   if (config.enhancements.includes("docker")) {
     checks.push(`check "Docker" "docker" "24"`);

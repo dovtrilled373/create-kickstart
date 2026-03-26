@@ -352,6 +352,333 @@ func getMe(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---------------------------------------------------------------------------
+// Backend: Axum (Rust)
+// ---------------------------------------------------------------------------
+
+function axumAuthHandler(): string {
+  return `use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    routing::{get, post},
+    Json, Router,
+};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String,
+    email: String,
+    exp: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct User {
+    id: String,
+    email: String,
+    name: String,
+    #[serde(skip_serializing)]
+    password_hash: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UserCreate {
+    pub email: String,
+    pub password: String,
+    #[serde(default)]
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UserLogin {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Debug, Serialize)]
+struct TokenResponse {
+    access_token: String,
+    token_type: String,
+}
+
+#[derive(Debug, Serialize)]
+struct UserResponse {
+    id: String,
+    email: String,
+    name: String,
+}
+
+type UserStore = Arc<Mutex<HashMap<String, User>>>;
+
+fn jwt_secret() -> String {
+    std::env::var("JWT_SECRET").unwrap_or_else(|_| "change-me-in-production".to_string())
+}
+
+fn hash_password(password: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(password.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+fn create_token(user_id: &str, email: &str) -> Result<String, StatusCode> {
+    let expiration = chrono::Utc::now()
+        .checked_add_signed(chrono::Duration::hours(24))
+        .unwrap()
+        .timestamp() as usize;
+    let claims = Claims { sub: user_id.to_string(), email: email.to_string(), exp: expiration };
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(jwt_secret().as_bytes()))
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+pub fn auth_router() -> Router {
+    let store: UserStore = Arc::new(Mutex::new(HashMap::new()));
+    Router::new()
+        .route("/register", post(register))
+        .route("/login", post(login))
+        .route("/me", get(get_me))
+        .with_state(store)
+}
+
+async fn register(
+    State(store): State<UserStore>,
+    Json(payload): Json<UserCreate>,
+) -> Result<(StatusCode, Json<TokenResponse>), StatusCode> {
+    let mut users = store.lock().unwrap();
+    if users.values().any(|u| u.email == payload.email) {
+        return Err(StatusCode::CONFLICT);
+    }
+    let id = Uuid::new_v4().to_string();
+    let user = User {
+        id: id.clone(),
+        email: payload.email.clone(),
+        name: payload.name,
+        password_hash: hash_password(&payload.password),
+    };
+    users.insert(id.clone(), user);
+    let token = create_token(&id, &payload.email)?;
+    Ok((StatusCode::CREATED, Json(TokenResponse { access_token: token, token_type: "bearer".into() })))
+}
+
+async fn login(
+    State(store): State<UserStore>,
+    Json(payload): Json<UserLogin>,
+) -> Result<Json<TokenResponse>, StatusCode> {
+    let users = store.lock().unwrap();
+    let hash = hash_password(&payload.password);
+    for user in users.values() {
+        if user.email == payload.email && user.password_hash == hash {
+            let token = create_token(&user.id, &user.email)?;
+            return Ok(Json(TokenResponse { access_token: token, token_type: "bearer".into() }));
+        }
+    }
+    Err(StatusCode::UNAUTHORIZED)
+}
+
+async fn get_me(
+    State(store): State<UserStore>,
+    headers: HeaderMap,
+) -> Result<Json<UserResponse>, StatusCode> {
+    let auth_header = headers.get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    if !auth_header.starts_with("Bearer ") {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let token = &auth_header[7..];
+    let data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(jwt_secret().as_bytes()),
+        &Validation::default(),
+    ).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let users = store.lock().unwrap();
+    let user = users.get(&data.claims.sub).ok_or(StatusCode::UNAUTHORIZED)?;
+    Ok(Json(UserResponse { id: user.id.clone(), email: user.email.clone(), name: user.name.clone() }))
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Backend: ASP.NET (C#)
+// ---------------------------------------------------------------------------
+
+function aspnetAuthEndpoints(): string {
+  return `using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
+
+public record AuthUserCreate(string Email, string Password, string Name = "");
+public record AuthUserLogin(string Email, string Password);
+public record AuthTokenResponse(string AccessToken, string TokenType = "bearer");
+public record AuthUserResponse(string Id, string Email, string Name);
+
+public static class AuthEndpoints
+{
+    private static readonly Dictionary<string, (string Id, string Email, string Name, string PasswordHash)> _users = new();
+    private static string JwtSecret => Environment.GetEnvironmentVariable("JWT_SECRET") ?? "change-me-in-production";
+
+    private static string HashPassword(string password)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+        return Convert.ToHexString(bytes).ToLower();
+    }
+
+    private static string CreateToken(string userId, string email)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[] { new Claim("sub", userId), new Claim("email", email) };
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(24),
+            signingCredentials: credentials);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public static void MapAuthEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/auth");
+
+        group.MapPost("/register", (AuthUserCreate payload) =>
+        {
+            if (_users.Values.Any(u => u.Email == payload.Email))
+                return Results.Conflict(new { detail = "Email already registered" });
+            var id = Guid.NewGuid().ToString();
+            _users[id] = (id, payload.Email, payload.Name, HashPassword(payload.Password));
+            return Results.Created($"/api/auth/me", new AuthTokenResponse(CreateToken(id, payload.Email)));
+        });
+
+        group.MapPost("/login", (AuthUserLogin payload) =>
+        {
+            var hash = HashPassword(payload.Password);
+            var user = _users.Values.FirstOrDefault(u => u.Email == payload.Email && u.PasswordHash == hash);
+            if (user == default) return Results.Unauthorized();
+            return Results.Ok(new AuthTokenResponse(CreateToken(user.Id, user.Email)));
+        });
+
+        group.MapGet("/me", (HttpContext ctx) =>
+        {
+            var auth = ctx.Request.Headers.Authorization.ToString();
+            if (!auth.StartsWith("Bearer ")) return Results.Unauthorized();
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
+                var principal = handler.ValidateToken(auth[7..], new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    IssuerSigningKey = key,
+                }, out _);
+                var userId = principal.FindFirst("sub")?.Value;
+                if (userId == null || !_users.ContainsKey(userId)) return Results.Unauthorized();
+                var user = _users[userId];
+                return Results.Ok(new AuthUserResponse(user.Id, user.Email, user.Name));
+            }
+            catch { return Results.Unauthorized(); }
+        });
+    }
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
+// Backend: Phoenix (Elixir — Guardian)
+// ---------------------------------------------------------------------------
+
+function phoenixAuthController(): string {
+  return `defmodule AppWeb.AuthController do
+  use AppWeb, :controller
+
+  @jwt_secret System.get_env("JWT_SECRET", "change-me-in-production")
+
+  def start_link(_opts) do
+    Agent.start_link(fn -> %{} end, name: __MODULE__)
+  end
+
+  def init(_) do
+    unless Process.whereis(__MODULE__) do
+      Agent.start_link(fn -> %{} end, name: __MODULE__)
+    end
+    :ok
+  end
+
+  defp hash_password(password) do
+    :crypto.hash(:sha256, password) |> Base.encode16(case: :lower)
+  end
+
+  defp create_token(user_id, email) do
+    header = Base.url_encode64(Jason.encode!(%{alg: "HS256", typ: "JWT"}), padding: false)
+    payload = Base.url_encode64(Jason.encode!(%{
+      sub: user_id,
+      email: email,
+      exp: System.system_time(:second) + 86400
+    }), padding: false)
+    signature = :crypto.mac(:hmac, :sha256, @jwt_secret, header <> "." <> payload)
+                |> Base.url_encode64(padding: false)
+    header <> "." <> payload <> "." <> signature
+  end
+
+  defp verify_token(token) do
+    case String.split(token, ".") do
+      [header, payload, signature] ->
+        expected = :crypto.mac(:hmac, :sha256, @jwt_secret, header <> "." <> payload)
+                   |> Base.url_encode64(padding: false)
+        if expected == signature do
+          {:ok, Jason.decode!(Base.url_decode64!(payload, padding: false))}
+        else
+          {:error, :invalid}
+        end
+      _ -> {:error, :invalid}
+    end
+  end
+
+  def register(conn, %{"email" => email, "password" => password} = params) do
+    users = Agent.get(__MODULE__, & &1)
+    if Enum.any?(Map.values(users), fn u -> u.email == email end) do
+      conn |> put_status(:conflict) |> json(%{detail: "Email already registered"})
+    else
+      id = Ecto.UUID.generate()
+      user = %{id: id, email: email, name: params["name"] || "", password_hash: hash_password(password)}
+      Agent.update(__MODULE__, fn users -> Map.put(users, id, user) end)
+      token = create_token(id, email)
+      conn |> put_status(:created) |> json(%{access_token: token, token_type: "bearer"})
+    end
+  end
+
+  def login(conn, %{"email" => email, "password" => password}) do
+    users = Agent.get(__MODULE__, & &1)
+    hash = hash_password(password)
+    case Enum.find(Map.values(users), fn u -> u.email == email and u.password_hash == hash end) do
+      nil -> conn |> put_status(:unauthorized) |> json(%{detail: "Invalid email or password"})
+      user ->
+        token = create_token(user.id, user.email)
+        json(conn, %{access_token: token, token_type: "bearer"})
+    end
+  end
+
+  def me(conn, _params) do
+    with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+         {:ok, claims} <- verify_token(token),
+         users <- Agent.get(__MODULE__, & &1),
+         user when not is_nil(user) <- Map.get(users, claims["sub"]) do
+      json(conn, %{id: user.id, email: user.email, name: user.name})
+    else
+      _ -> conn |> put_status(:unauthorized) |> json(%{detail: "Invalid token"})
+    end
+  end
+end
+`;
+}
+
+// ---------------------------------------------------------------------------
 // Frontend: auth lib
 // ---------------------------------------------------------------------------
 
@@ -638,6 +965,33 @@ export async function enhanceAuth(
         const authDir = path.join(beDir, "internal", "auth");
         await fs.ensureDir(authDir);
         await fs.writeFile(path.join(authDir, "handler.go"), goChiAuthHandler());
+        break;
+      }
+      case "axum": {
+        await fs.ensureDir(path.join(beDir, "src", "auth"));
+        await fs.writeFile(path.join(beDir, "src", "auth", "mod.rs"), axumAuthHandler());
+
+        // Add dependencies to Cargo.toml if it exists
+        const cargoFile = path.join(beDir, "Cargo.toml");
+        if (await fs.pathExists(cargoFile)) {
+          const contents = await fs.readFile(cargoFile, "utf-8");
+          if (!contents.includes("jsonwebtoken")) {
+            await fs.appendFile(cargoFile, `\njsonwebtoken = "9"\nsha2 = "0.10"\nchrono = { version = "0.4", features = ["serde"] }\n`);
+          }
+        }
+        break;
+      }
+      case "aspnet": {
+        await fs.ensureDir(path.join(beDir, "Auth"));
+        await fs.writeFile(path.join(beDir, "Auth", "AuthEndpoints.cs"), aspnetAuthEndpoints());
+        break;
+      }
+      case "phoenix": {
+        await fs.ensureDir(path.join(beDir, "lib", "app_web", "controllers"));
+        await fs.writeFile(
+          path.join(beDir, "lib", "app_web", "controllers", "auth_controller.ex"),
+          phoenixAuthController(),
+        );
         break;
       }
     }
