@@ -16,6 +16,9 @@ import { enhanceDeploy } from "./deploy.js";
 import { enhanceDepsAuto } from "./deps-auto.js";
 import { enhanceApiTypes } from "./api-types.js";
 import { enhanceAuth } from "./auth.js";
+import { enhanceAnalytics } from "./analytics.js";
+import { enhanceObservability } from "./observability.js";
+import { enhanceApiProtocol } from "./api-protocol.js";
 import * as p from "@clack/prompts";
 
 type Enhancer = (config: ProjectConfig, registry: Registry) => Promise<void>;
@@ -37,6 +40,9 @@ const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   "deps-auto": enhanceDepsAuto,
   "api-types": enhanceApiTypes,
   auth: enhanceAuth,
+  analytics: enhanceAnalytics,
+  observability: enhanceObservability,
+  "api-protocol": enhanceApiProtocol,
 };
 
 // Ensure certain enhancers run in dependency order regardless of user-specified order
@@ -57,6 +63,9 @@ const ENHANCER_ORDER: Enhancement[] = [
   "deps-auto",
   "api-types",
   "auth",
+  "analytics",
+  "observability", // Must run after docker (appends to docker-compose)
+  "api-protocol",
 ];
 
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {

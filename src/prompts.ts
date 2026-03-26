@@ -1,5 +1,5 @@
 import * as p from "@clack/prompts";
-import { ProjectConfig, ProjectType, FrontendStack, BackendStack, StandaloneStack, Enhancement, DatabaseChoice } from "./types.js";
+import { ProjectConfig, ProjectType, FrontendStack, BackendStack, MobileStack, StandaloneStack, Enhancement, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
 
 export async function runPrompts(partial: Partial<ProjectConfig>): Promise<ProjectConfig> {
   const name =
@@ -23,6 +23,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
         { value: "fullstack", label: "Fullstack", hint: "frontend/ + backend/ monorepo" },
         { value: "frontend", label: "Frontend only" },
         { value: "backend", label: "Backend / API only" },
+        { value: "mobile", label: "Mobile app" },
         { value: "cli-lib", label: "CLI tool / Library" },
       ],
     })) as ProjectType);
@@ -31,6 +32,7 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
 
   let frontend: FrontendStack | undefined = partial.frontend;
   let backend: BackendStack | undefined = partial.backend;
+  let mobile: MobileStack | undefined = partial.mobile;
   let standalone: StandaloneStack | undefined = partial.standalone;
 
   if ((type === "fullstack" || type === "frontend") && !frontend) {
@@ -60,6 +62,40 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
       ],
     })) as BackendStack;
     if (p.isCancel(backend)) process.exit(0);
+  }
+
+  // Mobile selection — for "mobile" type or optionally for "fullstack"
+  if (type === "mobile" && !mobile) {
+    mobile = (await p.select({
+      message: "Pick your mobile stack:",
+      options: [
+        { value: "react-native", label: "React Native", hint: "TypeScript" },
+        { value: "flutter", label: "Flutter", hint: "Dart" },
+        { value: "swift", label: "Swift (iOS)", hint: "SwiftUI" },
+        { value: "kotlin", label: "Kotlin (Android)", hint: "Jetpack Compose" },
+      ],
+    })) as MobileStack;
+    if (p.isCancel(mobile)) process.exit(0);
+  }
+
+  if (type === "fullstack" && !mobile) {
+    const wantMobile = await p.confirm({
+      message: "Add a mobile app to the monorepo?",
+      initialValue: false,
+    });
+    if (p.isCancel(wantMobile)) process.exit(0);
+    if (wantMobile) {
+      mobile = (await p.select({
+        message: "Pick your mobile stack:",
+        options: [
+          { value: "react-native", label: "React Native", hint: "TypeScript" },
+          { value: "flutter", label: "Flutter", hint: "Dart" },
+          { value: "swift", label: "Swift (iOS)", hint: "SwiftUI" },
+          { value: "kotlin", label: "Kotlin (Android)", hint: "Jetpack Compose" },
+        ],
+      })) as MobileStack;
+      if (p.isCancel(mobile)) process.exit(0);
+    }
   }
 
   if (type === "cli-lib" && !standalone) {
@@ -96,13 +132,18 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
             { value: "deps-auto", label: "Dependency automation", hint: "Dependabot config" },
             { value: "api-types", label: "Shared API types", hint: "OpenAPI → TypeScript (fullstack)" },
             { value: "auth", label: "Authentication scaffold", hint: "JWT + login/register endpoints" },
+            { value: "analytics", label: "Analytics / Marketing SDK", hint: "PostHog, CleverTap, MoEngage, Mixpanel, Segment" },
+            { value: "observability", label: "Observability stack", hint: "OpenTelemetry + Grafana + Prometheus + Tempo + Loki" },
+            { value: "api-protocol", label: "API protocol layers", hint: "GraphQL (client), gRPC (internal)" },
           ],
           initialValues: ["docker", "ci", "lint", "test", "env", "ai-context", "api-wiring", "doctor"],
         })) as Enhancement[]);
 
   if (p.isCancel(enhancements)) process.exit(0);
 
-  // Ask which database if db enhancement is selected
+  // --- Sub-selectors for enhancements that need choices ---
+
+  // Database
   let database: DatabaseChoice | undefined = partial.database;
   if (enhancements.includes("db") && !database) {
     database = (await p.select({
@@ -117,7 +158,37 @@ export async function runPrompts(partial: Partial<ProjectConfig>): Promise<Proje
     if (p.isCancel(database)) process.exit(0);
   }
 
+  // Analytics provider
+  let analyticsProvider: AnalyticsProvider | undefined = partial.analyticsProvider;
+  if (enhancements.includes("analytics") && !analyticsProvider) {
+    analyticsProvider = (await p.select({
+      message: "Pick your analytics provider:",
+      options: [
+        { value: "posthog", label: "PostHog", hint: "Open source, self-hostable" },
+        { value: "segment", label: "Segment", hint: "Universal data pipeline" },
+        { value: "mixpanel", label: "Mixpanel", hint: "Product analytics" },
+        { value: "clevertap", label: "CleverTap", hint: "Engagement + analytics" },
+        { value: "moengage", label: "MoEngage", hint: "Marketing automation" },
+      ],
+    })) as AnalyticsProvider;
+    if (p.isCancel(analyticsProvider)) process.exit(0);
+  }
+
+  // API protocol
+  let apiProtocol: ApiProtocol | undefined = partial.apiProtocol;
+  if (enhancements.includes("api-protocol") && !apiProtocol) {
+    apiProtocol = (await p.select({
+      message: "Pick your API protocol layer:",
+      options: [
+        { value: "graphql", label: "GraphQL only", hint: "Client-facing API" },
+        { value: "grpc", label: "gRPC only", hint: "Internal service-to-service" },
+        { value: "graphql+grpc", label: "Both GraphQL + gRPC", hint: "GraphQL for clients, gRPC for internal" },
+      ],
+    })) as ApiProtocol;
+    if (p.isCancel(apiProtocol)) process.exit(0);
+  }
+
   const targetDir = `${process.cwd()}/${name}`;
 
-  return { name, type, frontend, backend, standalone, enhancements, database, targetDir };
+  return { name, type, frontend, backend, mobile, standalone, enhancements, database, analyticsProvider, apiProtocol, targetDir };
 }

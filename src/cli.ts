@@ -1,7 +1,18 @@
 import { Command } from "commander";
-import { ProjectConfig, Enhancement, ProjectType, DatabaseChoice } from "./types.js";
+import { ProjectConfig, Enhancement, ProjectType, MobileStack, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
 
-export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactive: boolean } {
+export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactive: boolean; subcommand?: string; subcommandArgs?: string[] } {
+  // Check for "add" subcommand before commander parsing
+  const addIdx = argv.indexOf("add");
+  if (addIdx !== -1 && addIdx >= 2) {
+    return {
+      interactive: true,
+      subcommand: "add",
+      subcommandArgs: argv.slice(addIdx + 1),
+      enhancements: [],
+    };
+  }
+
   const program = new Command();
 
   program
@@ -9,12 +20,15 @@ export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactiv
     .description("Scaffold production-ready projects with composable stacks")
     .version("0.1.0")
     .argument("[name]", "Project name")
-    .option("--type <type>", "Project type: fullstack, frontend, backend, cli-lib")
+    .option("--type <type>", "Project type: fullstack, frontend, backend, mobile, cli-lib")
     .option("--frontend <stack>", "Frontend stack: nextjs, react-vite, vue, svelte, angular")
     .option("--backend <stack>", "Backend stack: fastapi, express, hono, django, go-chi, spring-boot")
+    .option("--mobile <stack>", "Mobile stack: react-native, flutter, swift, kotlin")
     .option("--standalone <stack>", "Standalone stack: python-cli, python-lib, node-cli")
-    .option("--with <enhancements>", "Comma-separated enhancements: docker,ci,lint,test,env,ai-context,pre-commit,db")
+    .option("--with <enhancements>", "Comma-separated enhancements")
     .option("--database <db>", "Database: postgres, mysql, sqlite, mongodb")
+    .option("--analytics-provider <provider>", "Analytics: posthog, clevertap, moengage, mixpanel, segment")
+    .option("--api-protocol <protocol>", "API protocol: graphql, grpc, graphql+grpc")
     .option("--no-interactive", "Disable interactive prompts (for AI agents and scripts)")
     .parse(argv);
 
@@ -32,9 +46,12 @@ export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactiv
     type: opts.type as ProjectType | undefined,
     frontend: opts.frontend,
     backend: opts.backend,
+    mobile: opts.mobile as MobileStack | undefined,
     standalone: opts.standalone,
     enhancements,
     database: opts.database as DatabaseChoice | undefined,
+    analyticsProvider: opts.analyticsProvider as AnalyticsProvider | undefined,
+    apiProtocol: opts.apiProtocol as ApiProtocol | undefined,
     interactive: isInteractive,
   };
 }

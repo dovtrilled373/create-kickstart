@@ -120,6 +120,50 @@
       "lintConfig": "checkstyle"
     }
   },
+  "mobile": {
+    "react-native": {
+      "name": "React Native",
+      "scaffoldCmd": "npx react-native init {{name}} --template react-native-template-typescript",
+      "scaffoldType": "cli",
+      "port": 8081,
+      "lang": "typescript",
+      "devCmd": "npx react-native start",
+      "buildCmd": "npx react-native build-android",
+      "testCmd": "npm test",
+      "lintConfig": "eslint-prettier"
+    },
+    "flutter": {
+      "name": "Flutter",
+      "scaffoldCmd": "flutter create {{name}}",
+      "scaffoldType": "cli",
+      "port": 0,
+      "lang": "dart",
+      "devCmd": "flutter run",
+      "buildCmd": "flutter build apk",
+      "testCmd": "flutter test",
+      "lintConfig": "flutter-analyze"
+    },
+    "swift": {
+      "name": "Swift (iOS)",
+      "scaffoldType": "template",
+      "port": 0,
+      "lang": "swift",
+      "devCmd": "open *.xcodeproj",
+      "buildCmd": "xcodebuild -scheme {{name}}",
+      "testCmd": "xcodebuild test -scheme {{name}}",
+      "lintConfig": "swiftlint"
+    },
+    "kotlin": {
+      "name": "Kotlin (Android)",
+      "scaffoldType": "template",
+      "port": 0,
+      "lang": "kotlin",
+      "devCmd": "./gradlew installDebug",
+      "buildCmd": "./gradlew assembleRelease",
+      "testCmd": "./gradlew test",
+      "lintConfig": "ktlint"
+    }
+  },
   "standalone": {
     "python-cli": {
       "name": "Python CLI (Click)",

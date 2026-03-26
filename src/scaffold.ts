@@ -111,7 +111,7 @@ async function scaffoldWithTemplate(
 
 async function scaffoldStack(
   registry: Registry,
-  category: "frontend" | "backend" | "standalone",
+  category: "frontend" | "backend" | "mobile" | "standalone",
   stackKey: string,
   targetDir: string,
   projectName: string,
@@ -179,6 +179,41 @@ export async function scaffold(
       throw err;
     }
 
+    // Mobile (optional for fullstack)
+    if (config.mobile) {
+      const mobDir = path.join(targetDir, "mobile");
+      const mobEntry = getRegistryEntry(registry, "mobile", config.mobile);
+      const s3 = p.spinner();
+      s3.start(`Scaffolding mobile (${mobEntry.name})…`);
+      try {
+        if (mobEntry.scaffoldType === "cli") {
+          await scaffoldWithCli(mobEntry, mobDir, "mobile");
+        } else {
+          await scaffoldWithTemplate(config.mobile, mobDir, name);
+        }
+        s3.stop(`Mobile (${mobEntry.name}) scaffolded`);
+      } catch (err) {
+        s3.stop(`Mobile scaffolding failed`);
+        throw err;
+      }
+    }
+
+    return;
+  }
+
+  // ── mobile-only ──────────────────────────────────────────────────────
+  if (type === "mobile") {
+    if (!config.mobile) throw new Error("Mobile project requires a mobile stack");
+    const entry = getRegistryEntry(registry, "mobile", config.mobile);
+    const s = p.spinner();
+    s.start(`Scaffolding ${entry.name}…`);
+    try {
+      await scaffoldStack(registry, "mobile", config.mobile, targetDir, name);
+      s.stop(`${entry.name} scaffolded`);
+    } catch (err) {
+      s.stop(`Scaffolding failed`);
+      throw err;
+    }
     return;
   }
 

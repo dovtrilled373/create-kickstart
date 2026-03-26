@@ -87,6 +87,13 @@ async function main() {
   // 1. Parse args
   const args = parseArgs(process.argv);
 
+  // Handle "add" subcommand
+  if (args.subcommand === "add") {
+    const { runAddService } = await import("./add-service.js");
+    await runAddService(args.subcommandArgs ?? []);
+    return;
+  }
+
   // 2. Load registry
   const registrySpinner = p.spinner();
   registrySpinner.start("Loading framework registry...");
@@ -111,11 +118,14 @@ async function main() {
       type: args.type!,
       frontend: args.frontend,
       backend: args.backend,
+      mobile: args.mobile,
       standalone: args.standalone,
       enhancements: args.enhancements?.length
         ? args.enhancements
         : ["docker", "ci", "lint", "test", "env", "ai-context"],
       database: args.database,
+      analyticsProvider: args.analyticsProvider,
+      apiProtocol: args.apiProtocol,
       targetDir: `${process.cwd()}/${args.name}`,
     };
   }
@@ -126,6 +136,7 @@ async function main() {
   p.log.info(`  Type:         ${config.type}`);
   if (config.frontend) p.log.info(`  Frontend:     ${config.frontend}`);
   if (config.backend) p.log.info(`  Backend:      ${config.backend}`);
+  if (config.mobile) p.log.info(`  Mobile:       ${config.mobile}`);
   if (config.standalone) p.log.info(`  Stack:        ${config.standalone}`);
   if (config.database) p.log.info(`  Database:     ${config.database}`);
   p.log.info(`  Enhancements: ${config.enhancements.join(", ")}`);
