@@ -19,6 +19,10 @@ import { enhanceAuth } from "./auth.js";
 import { enhanceAnalytics } from "./analytics.js";
 import { enhanceObservability } from "./observability.js";
 import { enhanceApiProtocol } from "./api-protocol.js";
+import { enhanceCache } from "./cache.js";
+import { enhanceQueue } from "./queue.js";
+import { enhanceWebSocket } from "./websocket.js";
+import { enhanceStorage } from "./storage.js";
 import * as p from "@clack/prompts";
 
 type Enhancer = (config: ProjectConfig, registry: Registry) => Promise<void>;
@@ -43,6 +47,10 @@ const ENHANCER_MAP: Partial<Record<Enhancement, Enhancer>> = {
   analytics: enhanceAnalytics,
   observability: enhanceObservability,
   "api-protocol": enhanceApiProtocol,
+  cache: enhanceCache,
+  queue: enhanceQueue,
+  websocket: enhanceWebSocket,
+  storage: enhanceStorage,
 };
 
 // Ensure certain enhancers run in dependency order regardless of user-specified order
@@ -66,6 +74,10 @@ const ENHANCER_ORDER: Enhancement[] = [
   "analytics",
   "observability", // Must run after docker (appends to docker-compose)
   "api-protocol",
+  "cache",         // After db — uses Redis
+  "queue",         // After cache
+  "websocket",     // After queue
+  "storage",       // After websocket
 ];
 
 export async function runEnhancers(config: ProjectConfig, registry: Registry): Promise<void> {
