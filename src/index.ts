@@ -87,10 +87,15 @@ async function main() {
   // 1. Parse args
   const args = parseArgs(process.argv);
 
-  // Handle "add" subcommand
+  // Handle subcommands
   if (args.subcommand === "add") {
     const { runAddService } = await import("./add-service.js");
     await runAddService(args.subcommandArgs ?? []);
+    return;
+  }
+  if (args.subcommand === "deploy") {
+    const { runDeploy } = await import("./deploy.js");
+    await runDeploy(args.subcommandArgs ?? []);
     return;
   }
 

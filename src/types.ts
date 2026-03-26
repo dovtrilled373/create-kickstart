@@ -30,6 +30,20 @@ export type DatabaseChoice = "postgres" | "mysql" | "sqlite" | "mongodb";
 export type AnalyticsProvider = "posthog" | "clevertap" | "moengage" | "mixpanel" | "segment";
 export type ApiProtocol = "graphql" | "grpc" | "graphql+grpc";
 
+// Deploy providers — progressive: PaaS → Cloud-native → Kubernetes
+export type DeployProvider =
+  // PaaS (easy, great for POCs)
+  | "railway"
+  | "render"
+  | "fly-io"
+  | "vercel"
+  // Cloud-native (production-grade)
+  | "aws-ecs"
+  | "gcp-cloud-run"
+  | "azure-container-apps"
+  // Kubernetes
+  | "kubernetes";
+
 export interface ProjectConfig {
   name: string;
   type: ProjectType;

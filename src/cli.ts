@@ -2,13 +2,23 @@ import { Command } from "commander";
 import { ProjectConfig, Enhancement, ProjectType, MobileStack, DatabaseChoice, AnalyticsProvider, ApiProtocol } from "./types.js";
 
 export function parseArgs(argv: string[]): Partial<ProjectConfig> & { interactive: boolean; subcommand?: string; subcommandArgs?: string[] } {
-  // Check for "add" subcommand before commander parsing
+  // Check for subcommands before commander parsing
   const addIdx = argv.indexOf("add");
   if (addIdx !== -1 && addIdx >= 2) {
     return {
       interactive: true,
       subcommand: "add",
       subcommandArgs: argv.slice(addIdx + 1),
+      enhancements: [],
+    };
+  }
+
+  const deployIdx = argv.indexOf("deploy");
+  if (deployIdx !== -1 && deployIdx >= 2) {
+    return {
+      interactive: true,
+      subcommand: "deploy",
+      subcommandArgs: argv.slice(deployIdx + 1),
       enhancements: [],
     };
   }
